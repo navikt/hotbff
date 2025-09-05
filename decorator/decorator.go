@@ -2,6 +2,7 @@ package decorator
 
 import (
 	"encoding/json"
+	"html/template"
 	"net/http"
 )
 
@@ -39,8 +40,8 @@ type Request struct {
 }
 
 type Response struct {
-	HeadAssets string `json:"headAssets"`
-	Header     string `json:"header"`
-	Footer     string `json:"footer"`
-	Scripts    string `json:"scripts"`
+	HeadAssets template.HTML `json:"headAssets"`
+	Header     template.HTML `json:"header"`
+	Footer     template.HTML `json:"footer"`
+	Scripts    template.HTML `json:"scripts"`
 }
