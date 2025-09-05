@@ -23,7 +23,7 @@ func GetToken(identityProvider IdentityProvider, target string) (*TokenSet, erro
 	data.Set(identityProviderKey, string(identityProvider))
 	data.Set(targetKey, target)
 	var v *TokenSet
-	err := post(tokenUrl, data, &v)
+	err := post(tokenURL, data, &v)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func ExchangeToken(identityProvider IdentityProvider, target string, userToken s
 	data.Set(targetKey, target)
 	data.Set(userTokenKey, userToken)
 	var v *TokenSet
-	err := post(tokenExchangeUrl, data, &v)
+	err := post(tokenExchangeURL, data, &v)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func IntrospectToken(identityProvider IdentityProvider, token string) (*TokenInt
 	data.Set(identityProviderKey, string(identityProvider))
 	data.Set(tokenKey, token)
 	var v *TokenIntrospection
-	err := post(tokenIntrospectionUrl, data, &v)
+	err := post(tokenIntrospectionURL, data, &v)
 	if err != nil {
 		return nil, err
 	}
@@ -73,9 +73,9 @@ const (
 )
 
 var (
-	tokenUrl              = os.Getenv("NAIS_TOKEN_ENDPOINT")
-	tokenExchangeUrl      = os.Getenv("NAIS_TOKEN_EXCHANGE_ENDPOINT")
-	tokenIntrospectionUrl = os.Getenv("NAIS_TOKEN_INTROSPECTION_ENDPOINT")
+	tokenURL              = os.Getenv("NAIS_TOKEN_ENDPOINT")
+	tokenExchangeURL      = os.Getenv("NAIS_TOKEN_EXCHANGE_ENDPOINT")
+	tokenIntrospectionURL = os.Getenv("NAIS_TOKEN_INTROSPECTION_ENDPOINT")
 )
 
 func post(url string, data *url.Values, v any) error {

@@ -18,7 +18,7 @@ func TestGetToken(t *testing.T) {
 	}))
 	defer server.Close()
 
-	tokenUrl = server.URL
+	tokenURL = server.URL
 
 	token, err := GetToken(IdentityProviderEntraId, "test")
 	if err != nil {
