@@ -2,32 +2,31 @@ package decorator
 
 import (
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"net/http"
+
+	"github.com/navikt/hotbff/common"
 )
 
-var (
-	decoratorURL     = "http://nav-dekoratoren.personbruker/dekoratoren/ssr"
-	decoratorURLDev  = "https://dekoratoren.ekstern.dev.nav.no/dekoratoren/ssr"
-	decoratorURLProd = "https://www.nav.no/dekoratoren/dekoratoren/ssr"
-)
-
-//todo:caching
-//todo:templating
-
-func Get(r *Request) (*Response, error) {
-	req, err := http.NewRequest(http.MethodGet, decoratorURLDev, nil)
+func Get(r *Options) (*Elements, error) {
+	req, err := http.NewRequest(http.MethodGet, getDecoratorURL(), nil)
 	if err != nil {
 		return nil, err
 	}
-	req.URL.Query().Set("context", r.Context)
+	q := req.URL.Query()
+	q.Set("context", r.Context)
+	req.URL.RawQuery = q.Encode()
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	//goland:noinspection GoUnhandledErrorResult
 	defer res.Body.Close()
-	var p *Response
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected statusCode: %d", res.StatusCode)
+	}
+	var p *Elements
 	err = json.NewDecoder(res.Body).Decode(&p)
 	if err != nil {
 		return nil, err
@@ -35,13 +34,28 @@ func Get(r *Request) (*Response, error) {
 	return p, nil
 }
 
-type Request struct {
+type Options struct {
 	Context string
 }
 
-type Response struct {
+type Elements struct {
 	HeadAssets template.HTML `json:"headAssets"`
 	Header     template.HTML `json:"header"`
 	Footer     template.HTML `json:"footer"`
 	Scripts    template.HTML `json:"scripts"`
+}
+
+var (
+	decoratorURL    = "http://nav-dekoratoren.personbruker/dekoratoren/ssr"
+	decoratorURLDev = "https://dekoratoren.ekstern.dev.nav.no/dekoratoren/ssr"
+	//decoratorURLProd = "https://www.nav.no/dekoratoren/ssr"
+)
+
+func getDecoratorURL() string {
+	switch common.ClusterName {
+	case "", "local", "test":
+		return decoratorURLDev
+	default:
+		return decoratorURL
+	}
 }
