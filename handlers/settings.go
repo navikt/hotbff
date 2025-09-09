@@ -1,4 +1,4 @@
-package hotbff
+package handlers
 
 import (
 	"encoding/json"
@@ -7,19 +7,17 @@ import (
 	"os"
 )
 
-var defaultEnvVarKeys = []string{
+var defaultEnvKeys = []string{
 	"NAIS_APP_NAME",
 	"NAIS_CLUSTER_NAME",
 	"USE_MSW",
 	"GIT_COMMIT",
 }
 
-func SettingsHandler(envVarKeys []string) http.Handler {
+func Settings(envKeys []string) http.Handler {
 	s := make(map[string]any)
-	for _, key := range defaultEnvVarKeys {
-		s[key] = parseEnv(key)
-	}
-	for _, key := range envVarKeys {
+	keys := append(defaultEnvKeys, envKeys...)
+	for _, key := range keys {
 		s[key] = parseEnv(key)
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -34,6 +32,8 @@ func SettingsHandler(envVarKeys []string) http.Handler {
 func parseEnv(key string) any {
 	v := os.Getenv(key)
 	switch v {
+	case "":
+		return nil
 	case "true":
 		return true
 	case "false":

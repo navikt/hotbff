@@ -12,15 +12,15 @@ import (
 type IdentityProvider string
 
 const (
-	IdentityProviderEntraId      IdentityProvider = "azuread"
-	IdentityProviderIdPorten     IdentityProvider = "idporten"
-	IdentityProviderMaskinporten IdentityProvider = "maskinporten"
-	IdentityProviderTokenX       IdentityProvider = "tokenx"
+	EntraId      IdentityProvider = "azuread"
+	IdPorten     IdentityProvider = "idporten"
+	Maskinporten IdentityProvider = "maskinporten"
+	TokenX       IdentityProvider = "tokenx"
 )
 
-func GetToken(identityProvider IdentityProvider, target string) (*TokenSet, error) {
+func GetToken(idp IdentityProvider, target string) (*TokenSet, error) {
 	data := &url.Values{}
-	data.Set(identityProviderKey, string(identityProvider))
+	data.Set(idpKey, string(idp))
 	data.Set(targetKey, target)
 	var v *TokenSet
 	err := post(tokenURL, data, &v)
@@ -30,9 +30,9 @@ func GetToken(identityProvider IdentityProvider, target string) (*TokenSet, erro
 	return v, nil
 }
 
-func ExchangeToken(identityProvider IdentityProvider, target string, userToken string) (*TokenSet, error) {
+func ExchangeToken(idp IdentityProvider, target string, userToken string) (*TokenSet, error) {
 	data := &url.Values{}
-	data.Set(identityProviderKey, string(identityProvider))
+	data.Set(idpKey, string(idp))
 	data.Set(targetKey, target)
 	data.Set(userTokenKey, userToken)
 	var v *TokenSet
@@ -43,9 +43,9 @@ func ExchangeToken(identityProvider IdentityProvider, target string, userToken s
 	return v, nil
 }
 
-func IntrospectToken(identityProvider IdentityProvider, token string) (*TokenIntrospection, error) {
+func IntrospectToken(idp IdentityProvider, token string) (*TokenIntrospection, error) {
 	data := &url.Values{}
-	data.Set(identityProviderKey, string(identityProvider))
+	data.Set(idpKey, string(idp))
 	data.Set(tokenKey, token)
 	var v *TokenIntrospection
 	err := post(tokenIntrospectionURL, data, &v)
@@ -66,10 +66,10 @@ type TokenIntrospection struct {
 }
 
 const (
-	identityProviderKey = "identity_provider"
-	targetKey           = "target"
-	tokenKey            = "token"
-	userTokenKey        = "user_token"
+	idpKey       = "identity_provider"
+	targetKey    = "target"
+	tokenKey     = "token"
+	userTokenKey = "user_token"
 )
 
 var (

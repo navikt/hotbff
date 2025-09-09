@@ -9,22 +9,19 @@ import (
 
 const jwtStr = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30"
 
-func TestGetBearerToken(t *testing.T) {
-	var token string
-	var want string
-
+func TestTokenFromRequest(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 
-	want = jwtStr
+	want := jwtStr
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", want))
-	if token, _ = GetBearerToken(req); token != want {
-		t.Errorf("getToken(req) = %q, want %q", token, want)
+	if token, ok := TokenFromRequest(req); token != want || !ok {
+		t.Errorf("token was %q, want %q", token, want)
 	}
 
 	want = ""
 	req.Header.Del("Authorization")
-	if token, _ = GetBearerToken(req); token != want {
-		t.Errorf("getToken(req) = %q, want %q", token, want)
+	if token, ok := TokenFromRequest(req); token != want || ok {
+		t.Errorf("token was %q, want %q", token, want)
 	}
 }
 

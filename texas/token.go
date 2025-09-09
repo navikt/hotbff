@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func GetBearerToken(req *http.Request) (token string, ok bool) {
+func TokenFromRequest(req *http.Request) (token string, ok bool) {
 	return strings.CutPrefix(req.Header.Get("Authorization"), "Bearer ")
 }
 
