@@ -13,13 +13,13 @@ func Protected(idp IdentityProvider, next http.Handler) http.Handler {
 			loginRedirect(w, req)
 			return
 		}
-		i, err := IntrospectToken(idp, token)
+		ti, err := IntrospectToken(idp, token)
 		if err != nil {
-			slog.ErrorContext(req.Context(), "texas: unauthorized: error", "error", err)
+			slog.ErrorContext(req.Context(), "texas: error", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		if !i.Active {
+		if !ti.Active {
 			slog.DebugContext(req.Context(), "texas: unauthorized: token invalid")
 			loginRedirect(w, req)
 			return

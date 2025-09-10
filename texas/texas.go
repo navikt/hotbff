@@ -44,12 +44,12 @@ func ExchangeToken(idp IdentityProvider, target string, userToken string) (*Toke
 func IntrospectToken(idp IdentityProvider, token string) (*TokenIntrospection, error) {
 	fv := newFormValues(idp)
 	fv.Set(tokenFormKey, token)
-	var v *TokenIntrospection
-	err := post(tokenIntrospectionURL, fv, &v)
+	var ti *TokenIntrospection
+	err := post(tokenIntrospectionURL, fv, &ti)
 	if err != nil {
 		return nil, err
 	}
-	return v, nil
+	return ti, nil
 }
 
 type TokenSet struct {

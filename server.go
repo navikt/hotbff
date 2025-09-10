@@ -41,25 +41,27 @@ func StartServer(opts *ServerOptions) {
 	http.Handle(fmt.Sprintf("GET %s", path.Join(basePath, "/settings.js")), settingsJS(envKeys))
 
 	mux := http.NewServeMux()
-	mux.Handle("/", rootHandler(rootDir, opts.DecoratorOpts))
 	if opts.Proxy != nil {
-		for prefix, t := range *opts.Proxy {
-			slog.Info("hotbff: adding proxy", "prefix", prefix, "target", t.Target)
-			mux.Handle(prefix, t.Handler(prefix))
+		for prefix, pOpts := range *opts.Proxy {
+			slog.Info("hotbff: adding proxy", "prefix", prefix, "target", pOpts.Target)
+			mux.Handle(prefix, pOpts.Handler(prefix))
 		}
 	}
+	mux.Handle("GET /", rootHandler(rootDir, opts.DecoratorOpts))
 
-	var r http.Handler
-	if opts.IDP == "" {
-		r = mux
-	} else {
-		r = texas.Protected(opts.IDP, mux)
+	var h http.Handler = mux
+	if opts.IDP != "" {
+		h = texas.Protected(opts.IDP, mux)
 	}
-	http.Handle(basePath, http.StripPrefix(basePath, r))
+	if basePath == "/" {
+		http.Handle(basePath, h)
+	} else {
+		http.Handle(basePath, http.StripPrefix(basePath, h))
+	}
 
 	addr := os.Getenv("BIND_ADDRESS")
 	if addr == "" {
-		addr = ":5000"
+		addr = ":9000"
 	}
 	slog.Info("hotbff: starting server", "address", addr, "basePath", basePath, "rootDir", rootDir)
 	err := http.ListenAndServe(addr, nil)

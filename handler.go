@@ -12,7 +12,7 @@ func rootHandler(rootDir string, opts *decorator.Options) http.Handler {
 	fs := http.FileServer(http.Dir(rootDir))
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		switch req.URL.Path {
-		case "", "/", "/index.html":
+		case "/":
 			idx.ServeHTTP(w, req)
 			return
 		}
@@ -20,7 +20,6 @@ func rootHandler(rootDir string, opts *decorator.Options) http.Handler {
 		fs.ServeHTTP(r, req)
 		if r.statusCode == http.StatusNotFound {
 			idx.ServeHTTP(w, req)
-			return
 		}
 	})
 }
@@ -32,9 +31,8 @@ func serveIndex(rootDir string, opts *decorator.Options) http.Handler {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			http.ServeFile(w, req, name)
 		})
-	} else {
-		return decorator.TemplateHandler(name, opts)
 	}
+	return decorator.TemplateHandler(name, opts)
 }
 
 type statusCodeRecorder struct {

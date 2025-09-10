@@ -55,12 +55,12 @@ func newTokenExchangeReverseProxy(target *url.URL, idp texas.IdentityProvider, i
 				slog.WarnContext(r.In.Context(), "proxy: unauthenticated")
 				return
 			}
-			s, err := texas.ExchangeToken(idp, idpTarget, u.Token)
+			ts, err := texas.ExchangeToken(idp, idpTarget, u.Token)
 			if err != nil {
 				slog.ErrorContext(r.In.Context(), "proxy: token error", "error", err)
 				return
 			}
-			r.Out.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.AccessToken))
+			r.Out.Header.Set("Authorization", fmt.Sprintf("Bearer %s", ts.AccessToken))
 		},
 	}
 }

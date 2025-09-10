@@ -15,10 +15,16 @@ func settingsJS(envKeys []string) http.Handler {
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-		_, _ = fmt.Fprint(w, "window.appSettings = ")
+		_, err := fmt.Fprint(w, "window.appSettings = ")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		enc := json.NewEncoder(w)
 		enc.SetIndent("", "  ")
-		_ = enc.Encode(&s)
+		err = enc.Encode(&s)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	})
 }
 

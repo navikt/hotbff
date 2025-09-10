@@ -18,7 +18,6 @@ func NewContext(ctx context.Context, u *User) context.Context {
 func FromContext(ctx context.Context) *User {
 	if u, ok := ctx.Value(userKey).(*User); ok {
 		return u
-	} else {
-		return &User{Authenticated: false}
 	}
+	return &User{Authenticated: false}
 }
