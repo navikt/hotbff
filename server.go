@@ -43,23 +43,14 @@ func StartServer(opts *ServerOptions) {
 
 	// (potentially) protected routes
 	mux := http.NewServeMux()
-	mux.Handle("/", rootHandler(rootDir, opts.DecoratorOpts))
+	mux.Handle(basePath, http.StripPrefix(basePath, rootHandler(rootDir, opts.DecoratorOpts)))
 	if opts.Proxy != nil {
 		for prefix, proxy := range *opts.Proxy {
 			slog.Info("hotbff: adding proxy", "prefix", prefix, "target", proxy.Target)
-			mux.Handle(prefix, proxy.Handler(prefix))
+			mux.Handle(path.Join(basePath, prefix), http.StripPrefix(basePath, proxy.Handler(prefix)))
 		}
 	}
-
-	var h http.Handler = mux
-	if opts.IDP != "" {
-		h = texas.Protected(opts.IDP, mux)
-	}
-	if basePath == "/" {
-		http.Handle(basePath, h)
-	} else {
-		http.Handle(basePath, http.StripPrefix(basePath, h))
-	}
+	http.Handle("/", texas.Protected(opts.IDP, mux))
 
 	addr := os.Getenv("BIND_ADDRESS")
 	if addr == "" {

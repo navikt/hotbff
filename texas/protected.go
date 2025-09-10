@@ -6,6 +6,9 @@ import (
 )
 
 func Protected(idp IdentityProvider, next http.Handler) http.Handler {
+	if idp == "" {
+		return next
+	}
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		token, ok := TokenFromRequest(req)
 		if !ok {
