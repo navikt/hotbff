@@ -31,6 +31,7 @@ func StartServer(opts *ServerOptions) {
 		rootDir = "dist"
 	}
 
+	// public routes
 	http.Handle("GET /isalive", statusHandler("ALIVE"))
 	http.Handle("GET /isready", statusHandler("READY"))
 
@@ -40,14 +41,15 @@ func StartServer(opts *ServerOptions) {
 	}
 	http.Handle(fmt.Sprintf("GET %s", path.Join(basePath, "/settings.js")), settingsJS(envKeys))
 
+	// (potentially) protected routes
 	mux := http.NewServeMux()
+	mux.Handle("/", rootHandler(rootDir, opts.DecoratorOpts))
 	if opts.Proxy != nil {
-		for prefix, pOpts := range *opts.Proxy {
-			slog.Info("hotbff: adding proxy", "prefix", prefix, "target", pOpts.Target)
-			mux.Handle(prefix, pOpts.Handler(prefix))
+		for prefix, proxy := range *opts.Proxy {
+			slog.Info("hotbff: adding proxy", "prefix", prefix, "target", proxy.Target)
+			mux.Handle(prefix, proxy.Handler(prefix))
 		}
 	}
-	mux.Handle("GET /", rootHandler(rootDir, opts.DecoratorOpts))
 
 	var h http.Handler = mux
 	if opts.IDP != "" {
