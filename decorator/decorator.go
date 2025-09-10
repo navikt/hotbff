@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-
-	"github.com/navikt/hotbff/common"
+	"os"
 )
 
 func Get(opts *Options) (*Elements, error) {
@@ -24,7 +23,7 @@ func Get(opts *Options) (*Elements, error) {
 	//goland:noinspection GoUnhandledErrorResult
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected statusCode: %d", res.StatusCode)
+		return nil, fmt.Errorf("decorator: unexpected statusCode: %d", res.StatusCode)
 	}
 	var elems *Elements
 	err = json.NewDecoder(res.Body).Decode(&elems)
@@ -52,7 +51,7 @@ var (
 )
 
 func getDecoratorURL() string {
-	switch common.ClusterName {
+	switch os.Getenv("NAIS_CLUSTER_NAME") {
 	case "", "local", "test":
 		return decoratorURLDev
 	default:

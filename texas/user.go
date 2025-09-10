@@ -1,12 +1,10 @@
 package texas
 
-import (
-	"context"
-)
+import "context"
 
-type key int
+type contextKey int
 
-const userKey = key(0)
+const userKey contextKey = 0
 
 type User struct {
 	Authenticated bool

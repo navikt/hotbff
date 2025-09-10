@@ -7,16 +7,16 @@ import (
 )
 
 func TestGetToken(t *testing.T) {
-	target := Target{Application: "test", Cluster: "test"}.String()
+	target := Target{"test", "test", "test"}.String()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		err := req.ParseForm()
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		if v := req.FormValue(idpKey); v != string(EntraId) {
+		if v := req.FormValue(idpFormKey); v != string(EntraId) {
 			t.Errorf("got identity_provider %q, want %q", v, EntraId)
 		}
-		if v := req.FormValue(targetKey); v != target {
+		if v := req.FormValue(targetFormKey); v != target {
 			t.Errorf("got target %q, want %q", v, target)
 		}
 		_, _ = w.Write([]byte(`{"access_token":"accessToken"}`))

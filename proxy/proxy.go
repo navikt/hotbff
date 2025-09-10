@@ -6,12 +6,13 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 
 	"github.com/navikt/hotbff/texas"
 )
 
 type Options struct {
-	Target      *url.URL               `json:"target"`
+	Target      string                 `json:"target"`
 	StripPrefix bool                   `json:"stripPrefix"`
 	IDP         texas.IdentityProvider `json:"idp"`
 	IDPTarget   string                 `json:"idpTarget"`
@@ -20,11 +21,16 @@ type Options struct {
 type Map map[string]*Options
 
 func (t *Options) Handler(prefix string) http.Handler {
+	target, err := url.Parse(t.Target)
+	if err != nil {
+		slog.Error("proxy: invalid target", "error", err)
+		os.Exit(1)
+	}
 	var h http.Handler
 	if t.IDP == "" {
-		h = newReverseProxy(t.Target)
+		h = newReverseProxy(target)
 	} else {
-		h = newTokenExchangeReverseProxy(t.Target, t.IDP, t.IDPTarget)
+		h = newTokenExchangeReverseProxy(target, t.IDP, t.IDPTarget)
 	}
 	if t.StripPrefix {
 		return http.StripPrefix(prefix, h)

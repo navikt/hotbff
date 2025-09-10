@@ -19,36 +19,33 @@ const (
 )
 
 func GetToken(idp IdentityProvider, target string) (*TokenSet, error) {
-	data := &url.Values{}
-	data.Set(idpKey, string(idp))
-	data.Set(targetKey, target)
-	var v *TokenSet
-	err := post(tokenURL, data, &v)
+	fv := newFormValues(idp)
+	fv.Set(targetFormKey, target)
+	var ts *TokenSet
+	err := post(tokenURL, fv, &ts)
 	if err != nil {
 		return nil, err
 	}
-	return v, nil
+	return ts, nil
 }
 
 func ExchangeToken(idp IdentityProvider, target string, userToken string) (*TokenSet, error) {
-	data := &url.Values{}
-	data.Set(idpKey, string(idp))
-	data.Set(targetKey, target)
-	data.Set(userTokenKey, userToken)
-	var v *TokenSet
-	err := post(tokenExchangeURL, data, &v)
+	fv := newFormValues(idp)
+	fv.Set(targetFormKey, target)
+	fv.Set(userTokenFormKey, userToken)
+	var ts *TokenSet
+	err := post(tokenExchangeURL, fv, &ts)
 	if err != nil {
 		return nil, err
 	}
-	return v, nil
+	return ts, nil
 }
 
 func IntrospectToken(idp IdentityProvider, token string) (*TokenIntrospection, error) {
-	data := &url.Values{}
-	data.Set(idpKey, string(idp))
-	data.Set(tokenKey, token)
+	fv := newFormValues(idp)
+	fv.Set(tokenFormKey, token)
 	var v *TokenIntrospection
-	err := post(tokenIntrospectionURL, data, &v)
+	err := post(tokenIntrospectionURL, fv, &v)
 	if err != nil {
 		return nil, err
 	}
@@ -66,10 +63,10 @@ type TokenIntrospection struct {
 }
 
 const (
-	idpKey       = "identity_provider"
-	targetKey    = "target"
-	tokenKey     = "token"
-	userTokenKey = "user_token"
+	idpFormKey       = "identity_provider"
+	targetFormKey    = "target"
+	tokenFormKey     = "token"
+	userTokenFormKey = "user_token"
 )
 
 var (
@@ -77,6 +74,12 @@ var (
 	tokenExchangeURL      = os.Getenv("NAIS_TOKEN_EXCHANGE_ENDPOINT")
 	tokenIntrospectionURL = os.Getenv("NAIS_TOKEN_INTROSPECTION_ENDPOINT")
 )
+
+func newFormValues(idp IdentityProvider) *url.Values {
+	data := &url.Values{}
+	data.Set(idpFormKey, string(idp))
+	return data
+}
 
 func post(url string, data *url.Values, v any) error {
 	res, err := http.Post(url, "application/x-www-form-urlencoded", strings.NewReader(data.Encode()))
@@ -86,7 +89,7 @@ func post(url string, data *url.Values, v any) error {
 	//goland:noinspection GoUnhandledErrorResult
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected statusCode: %d", res.StatusCode)
+		return fmt.Errorf("texas: unexpected statusCode: %d", res.StatusCode)
 	}
 	return json.NewDecoder(res.Body).Decode(v)
 }

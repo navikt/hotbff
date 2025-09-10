@@ -9,19 +9,19 @@ func Protected(idp IdentityProvider, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		token, ok := TokenFromRequest(req)
 		if !ok {
-			slog.DebugContext(req.Context(), "unauthorized: token missing")
-			LoginRedirect(w, req)
+			slog.DebugContext(req.Context(), "texas: unauthorized: token missing")
+			loginRedirect(w, req)
 			return
 		}
 		i, err := IntrospectToken(idp, token)
 		if err != nil {
-			slog.ErrorContext(req.Context(), "unauthorized: error", "error", err)
+			slog.ErrorContext(req.Context(), "texas: unauthorized: error", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		if !i.Active {
-			slog.DebugContext(req.Context(), "unauthorized: token invalid")
-			LoginRedirect(w, req)
+			slog.DebugContext(req.Context(), "texas: unauthorized: token invalid")
+			loginRedirect(w, req)
 			return
 		}
 		ctx := NewContext(req.Context(), &User{Authenticated: true, Token: token})
@@ -29,6 +29,6 @@ func Protected(idp IdentityProvider, next http.Handler) http.Handler {
 	})
 }
 
-func LoginRedirect(w http.ResponseWriter, req *http.Request) {
+func loginRedirect(w http.ResponseWriter, req *http.Request) {
 	http.Redirect(w, req, "/oauth2/login", http.StatusTemporaryRedirect)
 }

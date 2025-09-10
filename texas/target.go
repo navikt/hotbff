@@ -2,8 +2,7 @@ package texas
 
 import (
 	"fmt"
-
-	"github.com/navikt/hotbff/common"
+	"os"
 )
 
 type Target struct {
@@ -15,11 +14,11 @@ type Target struct {
 func (f Target) String() string {
 	cluster := f.Cluster
 	if cluster == "" {
-		cluster = common.ClusterName
+		cluster = os.Getenv("NAIS_CLUSTER_NAME")
 	}
 	namespace := f.Namespace
 	if namespace == "" {
-		namespace = common.Namespace
+		namespace = os.Getenv("NAIS_NAMESPACE")
 	}
 	return fmt.Sprintf("api://%s.%s.%s/.default", cluster, namespace, f.Application)
 }

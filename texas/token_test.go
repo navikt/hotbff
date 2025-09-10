@@ -37,7 +37,7 @@ func TestParseJWT(t *testing.T) {
 	}
 
 	want = "1234567890"
-	if n := j.Payload["sub"]; n != want {
+	if n := j.Claims["sub"]; n != want {
 		t.Errorf("sub was %q, want %q", n, want)
 	}
 }

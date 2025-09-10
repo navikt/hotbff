@@ -14,24 +14,28 @@ func TokenFromRequest(req *http.Request) (token string, ok bool) {
 
 type JWT struct {
 	Header    map[string]any
-	Payload   map[string]any
-	Signature string
+	Claims    map[string]any
+	Signature []byte
 }
 
 func ParseJWT(jwtStr string) (*JWT, error) {
 	parts := strings.Split(jwtStr, ".")
 	if len(parts) != 3 {
-		return nil, errors.New("invalid jwt")
+		return nil, errors.New("texas: invalid jwt")
 	}
-	header, err := parseJWTPart(parts[0])
+	h, err := parseJWTPart(parts[0])
 	if err != nil {
 		return nil, err
 	}
-	payload, err := parseJWTPart(parts[1])
+	c, err := parseJWTPart(parts[1])
 	if err != nil {
 		return nil, err
 	}
-	return &JWT{Header: header, Payload: payload, Signature: parts[2]}, nil
+	s, err := base64.RawURLEncoding.DecodeString(parts[2])
+	if err != nil {
+		return nil, err
+	}
+	return &JWT{Header: h, Claims: c, Signature: s}, nil
 }
 
 func parseJWTPart(base64Str string) (map[string]any, error) {

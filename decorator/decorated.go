@@ -2,16 +2,16 @@ package decorator
 
 import (
 	"html/template"
+	"log/slog"
 	"net/http"
-	"path"
-
-	"github.com/navikt/hotbff/common"
+	"os"
 )
 
-func ServeIndex(rootDir string, opts *Options) http.Handler {
-	tmpl, err := template.ParseFiles(path.Join(rootDir, "index.html"))
+func TemplateHandler(name string, opts *Options) http.Handler {
+	tmpl, err := template.ParseFiles(name)
 	if err != nil {
-		common.Fatal("failed to parse template", "rootDir", rootDir, "error", err)
+		slog.Error("decorator: failed to parse template", "name", name, "error", err)
+		os.Exit(1)
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		elems, err := Get(opts)

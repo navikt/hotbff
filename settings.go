@@ -1,4 +1,4 @@
-package handlers
+package hotbff
 
 import (
 	"encoding/json"
@@ -7,14 +7,7 @@ import (
 	"os"
 )
 
-var defaultEnvKeys = []string{
-	"NAIS_APP_NAME",
-	"NAIS_CLUSTER_NAME",
-	"USE_MSW",
-	"GIT_COMMIT",
-}
-
-func Settings(envKeys []string) http.Handler {
+func settingsJS(envKeys []string) http.Handler {
 	s := make(map[string]any)
 	keys := append(defaultEnvKeys, envKeys...)
 	for _, key := range keys {
@@ -41,4 +34,11 @@ func parseEnv(key string) any {
 	default:
 		return v
 	}
+}
+
+var defaultEnvKeys = []string{
+	"NAIS_APP_NAME",
+	"NAIS_CLUSTER_NAME",
+	"USE_MSW",
+	"GIT_COMMIT",
 }

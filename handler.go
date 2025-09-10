@@ -1,4 +1,4 @@
-package handlers
+package hotbff
 
 import (
 	"net/http"
@@ -7,13 +7,8 @@ import (
 	"github.com/navikt/hotbff/decorator"
 )
 
-func Root(rootDir string, opts *decorator.Options) http.Handler {
-	var idx http.Handler
-	if opts == nil {
-		idx = ServeIndex(rootDir)
-	} else {
-		idx = decorator.ServeIndex(rootDir, opts)
-	}
+func rootHandler(rootDir string, opts *decorator.Options) http.Handler {
+	idx := serveIndex(rootDir, opts)
 	fs := http.FileServer(http.Dir(rootDir))
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		switch req.URL.Path {
@@ -30,11 +25,16 @@ func Root(rootDir string, opts *decorator.Options) http.Handler {
 	})
 }
 
-func ServeIndex(rootDir string) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		http.ServeFile(w, req, path.Join(rootDir, "index.html"))
-	})
+func serveIndex(rootDir string, opts *decorator.Options) http.Handler {
+	name := path.Join(rootDir, "index.html")
+	if opts == nil {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			http.ServeFile(w, req, name)
+		})
+	} else {
+		return decorator.TemplateHandler(name, opts)
+	}
 }
 
 type statusCodeRecorder struct {
