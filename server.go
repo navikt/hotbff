@@ -65,7 +65,7 @@ func StartServer(opts *ServerOptions) {
 
 	if opts.Proxy != nil {
 		for prefix, opts := range *opts.Proxy {
-			pattern := path.Join(basePath, prefix)
+			pattern := path.Join(basePath, prefix) + "/"
 			slog.Info("hotbff: adding proxy", "prefix", prefix, "pattern", pattern, "target", opts.Target)
 			mux.Handle(pattern, maybeStripPrefix(basePath, opts.Handler(prefix)))
 		}
