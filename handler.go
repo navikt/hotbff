@@ -1,6 +1,7 @@
 package hotbff
 
 import (
+	"log/slog"
 	"net/http"
 	"path"
 
@@ -8,9 +9,10 @@ import (
 )
 
 func rootHandler(rootDir string, opts *decorator.Options) http.Handler {
-	idx := serveIndex(rootDir, opts)
+	idx := indexHandler(rootDir, opts)
 	fs := http.FileServer(http.Dir(rootDir))
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		slog.Debug("hotbff: rootHandler", "path", req.URL.Path)
 		switch req.URL.Path {
 		case "/":
 			idx.ServeHTTP(w, req)
@@ -24,7 +26,7 @@ func rootHandler(rootDir string, opts *decorator.Options) http.Handler {
 	})
 }
 
-func serveIndex(rootDir string, opts *decorator.Options) http.Handler {
+func indexHandler(rootDir string, opts *decorator.Options) http.Handler {
 	name := path.Join(rootDir, "index.html")
 	if opts == nil {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
