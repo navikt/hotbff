@@ -64,10 +64,10 @@ func StartServer(opts *ServerOptions) {
 	mux.Handle(basePath, maybeStripPrefix(basePath, rootHandler(rootDir, opts.DecoratorOpts)))
 
 	if opts.Proxy != nil {
-		for proxyPrefix, proxyOpts := range *opts.Proxy {
-			proxyPath := path.Join(basePath, proxyPrefix)
-			slog.Info("hotbff: adding proxy", "prefix", proxyPrefix, "proxyPath", proxyPath, "target", proxyOpts.Target)
-			mux.Handle(proxyPath, maybeStripPrefix(basePath, proxyOpts.Handler(proxyPrefix)))
+		for prefix, opts := range *opts.Proxy {
+			pattern := path.Join(basePath, prefix)
+			slog.Info("hotbff: adding proxy", "prefix", prefix, "pattern", pattern, "target", opts.Target)
+			mux.Handle(pattern, maybeStripPrefix(basePath, opts.Handler(prefix)))
 		}
 	}
 
