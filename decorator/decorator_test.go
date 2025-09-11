@@ -3,7 +3,7 @@ package decorator
 import "testing"
 
 func TestGet(t *testing.T) {
-	elems, err := Get(&Options{Context: "privatperson"})
+	elems, err := GetElements(&Options{Context: "privatperson"})
 	if err != nil {
 		t.Fatal(err)
 	}

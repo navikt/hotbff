@@ -1,7 +1,6 @@
 package texas
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,7 +12,7 @@ func TestTokenFromRequest(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 
 	want := jwtStr
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", want))
+	req.Header.Set("Authorization", "Bearer "+want)
 	if token, ok := TokenFromRequest(req); token != want || !ok {
 		t.Errorf("token was %q, want %q", token, want)
 	}

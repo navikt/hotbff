@@ -7,10 +7,13 @@ import (
 	"os"
 )
 
-func settingsJS(envKeys []string) http.Handler {
+func settingsHandler(envKeys *[]string) http.Handler {
 	s := make(map[string]any)
-	keys := append(defaultEnvKeys, envKeys...)
-	for _, key := range keys {
+	allKeys := defaultEnvKeys
+	if envKeys != nil {
+		allKeys = append(defaultEnvKeys, *envKeys...)
+	}
+	for _, key := range allKeys {
 		s[key] = parseEnv(key)
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {

@@ -14,7 +14,7 @@ func TemplateHandler(name string, opts *Options) http.Handler {
 		os.Exit(1)
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		elems, err := Get(opts)
+		elems, err := GetElements(opts)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

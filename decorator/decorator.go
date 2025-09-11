@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-func Get(opts *Options) (*Elements, error) {
+func GetElements(opts *Options) (*Elements, error) {
 	req, err := http.NewRequest(http.MethodGet, getDecoratorURL(), nil)
 	if err != nil {
 		return nil, err

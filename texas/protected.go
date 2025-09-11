@@ -13,18 +13,18 @@ func Protected(idp IdentityProvider, basePath string, next http.Handler) http.Ha
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		token, ok := TokenFromRequest(req)
 		if !ok {
-			slog.DebugContext(req.Context(), "texas: unauthorized: token missing")
+			slog.DebugContext(req.Context(), "texas: unauthorized: token missing", "idp", idp)
 			loginRedirect(w, req, basePath)
 			return
 		}
 		ti, err := IntrospectToken(idp, token)
 		if err != nil {
-			slog.ErrorContext(req.Context(), "texas: error", "error", err)
+			slog.ErrorContext(req.Context(), "texas: error", "idp", idp, "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		if !ti.Active {
-			slog.DebugContext(req.Context(), "texas: unauthorized: token invalid")
+			slog.DebugContext(req.Context(), "texas: unauthorized: token invalid", "idp", idp)
 			loginRedirect(w, req, basePath)
 			return
 		}
@@ -34,5 +34,6 @@ func Protected(idp IdentityProvider, basePath string, next http.Handler) http.Ha
 }
 
 func loginRedirect(w http.ResponseWriter, req *http.Request, basePath string) {
-	http.Redirect(w, req, path.Join(basePath, "/oauth2/login"), http.StatusTemporaryRedirect)
+	url := path.Join(basePath, "/oauth2/login")
+	http.Redirect(w, req, url, http.StatusTemporaryRedirect)
 }

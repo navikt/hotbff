@@ -5,6 +5,11 @@ import (
 	"os"
 )
 
+var (
+	cluster   = os.Getenv("NAIS_CLUSTER_NAME")
+	namespace = os.Getenv("NAIS_NAMESPACE")
+)
+
 type Target struct {
 	Application string
 	Namespace   string
@@ -12,13 +17,13 @@ type Target struct {
 }
 
 func (f Target) String() string {
-	cluster := f.Cluster
-	if cluster == "" {
-		cluster = os.Getenv("NAIS_CLUSTER_NAME")
+	c := f.Cluster
+	if c == "" {
+		c = cluster
 	}
-	namespace := f.Namespace
-	if namespace == "" {
-		namespace = os.Getenv("NAIS_NAMESPACE")
+	n := f.Namespace
+	if n == "" {
+		n = namespace
 	}
-	return fmt.Sprintf("api://%s.%s.%s/.default", cluster, namespace, f.Application)
+	return fmt.Sprintf("api://%s.%s.%s/.default", c, n, f.Application)
 }

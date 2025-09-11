@@ -1,7 +1,6 @@
 package proxy
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
 	"net/http/httputil"
@@ -20,22 +19,16 @@ type Options struct {
 
 type Map map[string]*Options
 
-func (t *Options) Handler(prefix string) http.Handler {
+func (t *Options) Handler() http.Handler {
 	target, err := url.Parse(t.Target)
 	if err != nil {
-		slog.Error("proxy: invalid target", "error", err)
+		slog.Error("proxy: invalid target", "target", t.Target, "error", err)
 		os.Exit(1)
 	}
-	var h http.Handler
 	if t.IDP == "" {
-		h = newReverseProxy(target)
-	} else {
-		h = newTokenExchangeReverseProxy(target, t.IDP, t.IDPTarget)
+		return newReverseProxy(target)
 	}
-	if t.StripPrefix {
-		return http.StripPrefix(prefix, h)
-	}
-	return h
+	return newTokenExchangeReverseProxy(target, t.IDP, t.IDPTarget)
 }
 
 func newReverseProxy(target *url.URL) *httputil.ReverseProxy {
@@ -50,17 +43,17 @@ func newTokenExchangeReverseProxy(target *url.URL, idp texas.IdentityProvider, i
 	return &httputil.ReverseProxy{
 		Rewrite: func(r *httputil.ProxyRequest) {
 			r.SetURL(target)
-			u := texas.FromContext(r.In.Context())
-			if !u.Authenticated {
-				slog.WarnContext(r.In.Context(), "proxy: unauthenticated")
+			user := texas.FromContext(r.In.Context())
+			if !user.Authenticated {
+				slog.WarnContext(r.In.Context(), "proxy: user unauthenticated", "idp", idp, "idpTarget", idpTarget)
 				return
 			}
-			ts, err := texas.ExchangeToken(idp, idpTarget, u.Token)
+			ts, err := texas.ExchangeToken(idp, idpTarget, user.Token)
 			if err != nil {
-				slog.ErrorContext(r.In.Context(), "proxy: token error", "error", err)
+				slog.ErrorContext(r.In.Context(), "proxy: token exchange error", "idp", idp, "idpTarget", idpTarget, "error", err)
 				return
 			}
-			r.Out.Header.Set("Authorization", fmt.Sprintf("Bearer %s", ts.AccessToken))
+			r.Out.Header.Set("Authorization", "Bearer "+ts.AccessToken)
 		},
 	}
 }
