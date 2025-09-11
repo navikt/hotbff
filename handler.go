@@ -12,9 +12,9 @@ func rootHandler(rootDir string, opts *decorator.Options) http.Handler {
 	idx := indexHandler(rootDir, opts)
 	fs := http.FileServer(http.Dir(rootDir))
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		slog.Debug("hotbff: rootHandler", "path", req.URL.Path)
+		slog.Debug("hotbff: serving static", "url", req.URL.String(), "path", req.URL.Path)
 		switch req.URL.Path {
-		case "/":
+		case "", "/", "index.html", "/index.html":
 			idx.ServeHTTP(w, req)
 			return
 		}
