@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/navikt/hotbff/decorator"
 	"github.com/navikt/hotbff/proxy"
@@ -65,7 +66,7 @@ func StartServer(opts *ServerOptions) {
 
 	if opts.Proxy != nil {
 		for prefix, opts := range *opts.Proxy {
-			pattern := path.Join(basePath, prefix) + "/"
+			pattern := ensureTrailingSlash(path.Join(basePath, prefix))
 			slog.Info("hotbff: adding proxy", "prefix", prefix, "pattern", pattern, "target", opts.Target)
 			mux.Handle(pattern, maybeStripPrefix(basePath, opts.Handler(prefix)))
 		}
@@ -86,4 +87,11 @@ func maybeStripPrefix(prefix string, h http.Handler) http.Handler {
 		return h
 	}
 	return http.StripPrefix(prefix, h)
+}
+
+func ensureTrailingSlash(s string) string {
+	if !strings.HasSuffix(s, "/") {
+		return s + "/"
+	}
+	return s
 }
