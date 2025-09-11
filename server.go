@@ -61,9 +61,9 @@ func Handler(opts *Options) http.Handler {
 
 	// /base/path/ (protected)
 	protected := http.NewServeMux()
-	protected.Handle("/", rootHandler(rootDir, opts.DecoratorOpts))
+	protected.Handle("/", staticHandler(rootDir, opts.DecoratorOpts))
 
-	// /base/path/proxy/prefix (protected)
+	// /base/path/proxy/prefix/ (protected)
 	if opts.Proxy != nil {
 		for prefix, proxyOpts := range *opts.Proxy {
 			slog.Info("hotbff: adding proxy", "prefix", prefix, "target", proxyOpts.Target)

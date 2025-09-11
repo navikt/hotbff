@@ -16,7 +16,7 @@ func TestRootHandler(t *testing.T) {
 		t.Fatalf("failed to create index.html: %v", err)
 	}
 	r := http.NewServeMux()
-	r.Handle("/test/", http.StripPrefix("/test/", rootHandler(rootDir, nil)))
+	r.Handle("/test/", http.StripPrefix("/test/", staticHandler(rootDir, nil)))
 	h := http.NewServeMux()
 	h.Handle("/", r)
 	req := httptest.NewRequest("GET", "/test/test", nil)

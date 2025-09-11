@@ -35,5 +35,8 @@ func Protected(idp IdentityProvider, basePath string, next http.Handler) http.Ha
 
 func loginRedirect(w http.ResponseWriter, req *http.Request, basePath string) {
 	url := path.Join(basePath, "/oauth2/login")
+	if basePath != "/" {
+		url = url + "?redirect=" + basePath
+	}
 	http.Redirect(w, req, url, http.StatusTemporaryRedirect)
 }
