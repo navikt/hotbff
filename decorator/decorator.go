@@ -45,13 +45,14 @@ type Elements struct {
 }
 
 var (
+	cluster         = os.Getenv("NAIS_CLUSTER_NAME")
 	decoratorURL    = "http://nav-dekoratoren.personbruker/dekoratoren/ssr"
 	decoratorURLDev = "https://dekoratoren.ekstern.dev.nav.no/dekoratoren/ssr"
 	//decoratorURLProd = "https://www.nav.no/dekoratoren/ssr"
 )
 
 func getDecoratorURL() string {
-	switch os.Getenv("NAIS_CLUSTER_NAME") {
+	switch cluster {
 	case "", "local", "test":
 		return decoratorURLDev
 	default:

@@ -66,7 +66,7 @@ func StartServer(opts *ServerOptions) {
 	if opts.Proxy != nil {
 		for proxyPrefix, proxyOpts := range *opts.Proxy {
 			proxyPath := path.Join(basePath, proxyPrefix)
-			slog.Info("hotbff: adding proxy", "prefix", proxyPrefix, "target", proxyOpts.Target)
+			slog.Info("hotbff: adding proxy", "prefix", proxyPrefix, "proxyPath", proxyPath, "target", proxyOpts.Target)
 			mux.Handle(proxyPath, maybeStripPrefix(basePath, proxyOpts.Handler(proxyPrefix)))
 		}
 	}
