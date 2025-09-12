@@ -8,6 +8,7 @@ import (
 
 func Protected(idp IdentityProvider, basePath string, next http.Handler) http.Handler {
 	if idp == "" {
+		slog.Warn("texas: identity provider not set, token validation disabled")
 		return next
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -38,5 +39,6 @@ func loginRedirect(w http.ResponseWriter, req *http.Request, basePath string) {
 	if basePath != "/" {
 		url = url + "?redirect=" + basePath
 	}
+	slog.DebugContext(req.Context(), "texas: login redirect", "url", url)
 	http.Redirect(w, req, url, http.StatusTemporaryRedirect)
 }
