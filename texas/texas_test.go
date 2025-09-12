@@ -4,33 +4,62 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/navikt/hotbff/internal/assert"
 )
 
 func TestGetToken(t *testing.T) {
-	target := Target{"test", "test", "test"}.String()
+	target := Target{"a", "b", "c"}.String()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		err := req.ParseForm()
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-		if v := req.FormValue(idpFormKey); v != string(EntraId) {
-			t.Errorf("got identity_provider %q, want %q", v, EntraId)
-		}
-		if v := req.FormValue(targetFormKey); v != target {
-			t.Errorf("got target %q, want %q", v, target)
-		}
+		assert.Nil(t, err)
+		assert.Equal(t, req.FormValue(idpFormKey), string(EntraId))
+		assert.Equal(t, req.FormValue(targetFormKey), target)
 		_, _ = w.Write([]byte(`{"access_token":"accessToken"}`))
 	}))
 	defer server.Close()
 
 	tokenURL = server.URL
 
-	token, err := GetToken(EntraId, target)
-	if err != nil {
-		t.Fatal(err)
-	}
-	want := "accessToken"
-	if token.AccessToken != want {
-		t.Errorf("GetToken() = %q, want %q", token.AccessToken, want)
-	}
+	ts, err := GetToken(EntraId, target)
+	assert.Nil(t, err)
+	assert.Equal(t, ts.AccessToken, "accessToken")
+}
+
+func TestExchangeToken(t *testing.T) {
+	target := Target{"a", "b", "c"}.String()
+	userToken := "userToken"
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		err := req.ParseForm()
+		assert.Nil(t, err)
+		assert.Equal(t, req.FormValue(idpFormKey), string(TokenX))
+		assert.Equal(t, req.FormValue(targetFormKey), target)
+		assert.Equal(t, req.FormValue(userTokenFormKey), userToken)
+		_, _ = w.Write([]byte(`{"access_token":"accessToken"}`))
+	}))
+	defer server.Close()
+
+	tokenExchangeURL = server.URL
+
+	ts, err := ExchangeToken(TokenX, target, userToken)
+	assert.Nil(t, err)
+	assert.Equal(t, ts.AccessToken, "accessToken")
+}
+
+func TestIntrospectToken(t *testing.T) {
+	token := "token"
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		err := req.ParseForm()
+		assert.Nil(t, err)
+		assert.Equal(t, req.FormValue(idpFormKey), string(IdPorten))
+		assert.Equal(t, req.FormValue(tokenFormKey), token)
+		_, _ = w.Write([]byte(`{"active":true}`))
+	}))
+	defer server.Close()
+
+	tokenIntrospectionURL = server.URL
+
+	ti, err := IntrospectToken(IdPorten, token)
+	assert.Nil(t, err)
+	assert.True(t, ti.Active)
 }

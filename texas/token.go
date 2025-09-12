@@ -9,7 +9,11 @@ import (
 )
 
 func TokenFromRequest(req *http.Request) (token string, ok bool) {
-	return strings.CutPrefix(req.Header.Get("Authorization"), "Bearer ")
+	token, ok = strings.CutPrefix(req.Header.Get("Authorization"), "Bearer ")
+	if !ok {
+		token = ""
+	}
+	return
 }
 
 type JWT struct {

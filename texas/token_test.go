@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/navikt/hotbff/internal/assert"
 )
 
 const jwtStr = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30"
@@ -11,32 +13,30 @@ const jwtStr = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiw
 func TestTokenFromRequest(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 
-	want := jwtStr
-	req.Header.Set("Authorization", "Bearer "+want)
-	if token, ok := TokenFromRequest(req); token != want || !ok {
-		t.Errorf("token was %q, want %q", token, want)
-	}
+	req.Header.Set("Authorization", "Bearer "+jwtStr)
+	token, ok := TokenFromRequest(req)
+	assert.Equal(t, token, jwtStr)
+	assert.True(t, ok)
 
-	want = ""
+	req.Header.Set("Authorization", "Bearer ")
+	token, ok = TokenFromRequest(req)
+	assert.Equal(t, token, "")
+	assert.True(t, ok)
+
+	req.Header.Set("Authorization", "Bearer")
+	token, ok = TokenFromRequest(req)
+	assert.Equal(t, token, "")
+	assert.False(t, ok)
+
 	req.Header.Del("Authorization")
-	if token, ok := TokenFromRequest(req); token != want || ok {
-		t.Errorf("token was %q, want %q", token, want)
-	}
+	token, ok = TokenFromRequest(req)
+	assert.Equal(t, token, "")
+	assert.False(t, ok)
 }
 
 func TestParseJWT(t *testing.T) {
 	j, err := ParseJWT(jwtStr)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	want := "HS256"
-	if alg := j.Header["alg"]; alg != want {
-		t.Errorf("alg was %q, want %q", alg, want)
-	}
-
-	want = "1234567890"
-	if n := j.Claims["sub"]; n != want {
-		t.Errorf("sub was %q, want %q", n, want)
-	}
+	assert.Nil(t, err)
+	assert.Equal(t, j.Header["alg"], "HS256")
+	assert.Equal(t, j.Claims["sub"], "1234567890")
 }

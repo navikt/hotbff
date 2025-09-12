@@ -1,22 +1,16 @@
 package decorator
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/navikt/hotbff/internal/assert"
+)
 
 func TestGet(t *testing.T) {
 	elems, err := GetElements(&Options{Context: "privatperson"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if elems.HeadAssets == "" {
-		t.Error("HeadAssets is empty")
-	}
-	if elems.Header == "" {
-		t.Error("Header is empty")
-	}
-	if elems.Footer == "" {
-		t.Error("Footer is empty")
-	}
-	if elems.Scripts == "" {
-		t.Error("Scripts is empty")
-	}
+	assert.Nil(t, err)
+	assert.NotEqual(t, elems.HeadAssets, "")
+	assert.NotEqual(t, elems.Header, "")
+	assert.NotEqual(t, elems.Footer, "")
+	assert.NotEqual(t, elems.Scripts, "")
 }
