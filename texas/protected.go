@@ -6,6 +6,9 @@ import (
 	"path"
 )
 
+// Protected is a middleware that protects the given handler with token validation.
+// If the identity provider is not set, the handler is returned as is.
+// If the token is missing or invalid, the user is redirected to the login page.
 func Protected(idp IdentityProvider, basePath string, next http.Handler) http.Handler {
 	if idp == "" {
 		slog.Warn("texas: identity provider not set, token validation disabled")

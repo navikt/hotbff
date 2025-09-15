@@ -18,6 +18,7 @@ const (
 	TokenX       IdentityProvider = "tokenx"
 )
 
+// GetToken retrieves a token from the identity provider for the given target audience.
 func GetToken(idp IdentityProvider, target string) (*TokenSet, error) {
 	fv := newFormValues(idp)
 	fv.Set(targetFormKey, target)
@@ -29,6 +30,7 @@ func GetToken(idp IdentityProvider, target string) (*TokenSet, error) {
 	return ts, nil
 }
 
+// ExchangeToken exchanges the user's token for a new token from the identity provider for the given target audience.
 func ExchangeToken(idp IdentityProvider, target string, userToken string) (*TokenSet, error) {
 	fv := newFormValues(idp)
 	fv.Set(targetFormKey, target)
@@ -41,6 +43,7 @@ func ExchangeToken(idp IdentityProvider, target string, userToken string) (*Toke
 	return ts, nil
 }
 
+// IntrospectToken validates the given token from the identity provider.
 func IntrospectToken(idp IdentityProvider, token string) (*TokenIntrospection, error) {
 	fv := newFormValues(idp)
 	fv.Set(tokenFormKey, token)
