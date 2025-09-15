@@ -9,11 +9,11 @@ import (
 
 func settingsHandler(envKeys *[]string) http.Handler {
 	s := make(map[string]any)
-	allKeys := defaultEnvKeys
+	allEnvKeys := defaultEnvKeys
 	if envKeys != nil {
-		allKeys = append(defaultEnvKeys, *envKeys...)
+		allEnvKeys = append(defaultEnvKeys, *envKeys...)
 	}
-	for _, key := range allKeys {
+	for _, key := range allEnvKeys {
 		s[key] = parseEnv(key)
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
