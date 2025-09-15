@@ -19,6 +19,7 @@ func TemplateHandler(name string, opts *Options) http.Handler {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		w.Header().Set("Cache-Control", "max-age=3600, private")
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		if err := tmpl.Execute(w, &elems); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
