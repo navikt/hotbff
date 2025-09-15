@@ -17,8 +17,6 @@ type Options struct {
 	IDPTarget   string                 `json:"idpTarget"`
 }
 
-type Map map[string]*Options
-
 func (t *Options) Handler() http.Handler {
 	target, err := url.Parse(t.Target)
 	if err != nil {
@@ -26,16 +24,30 @@ func (t *Options) Handler() http.Handler {
 		os.Exit(1)
 	}
 	if t.IDP == "" {
-		return newReverseProxy(target)
+		return &httputil.ReverseProxy{
+			Rewrite: func(r *httputil.ProxyRequest) {
+				r.SetURL(target)
+			},
+		}
 	}
 	return newTokenExchangeReverseProxy(target, t.IDP, t.IDPTarget)
 }
 
-func newReverseProxy(target *url.URL) *httputil.ReverseProxy {
-	return &httputil.ReverseProxy{
-		Rewrite: func(r *httputil.ProxyRequest) {
-			r.SetURL(target)
-		},
+type Map map[string]*Options
+
+func Configure(m *Map, mux *http.ServeMux) {
+	if m == nil {
+		slog.Info("proxy: no proxy")
+		return
+	}
+	for prefix, opts := range *m {
+		slog.Info("proxy: adding proxy", "prefix", prefix, "target", opts.Target)
+		proxyHandler := opts.Handler()
+		if opts.StripPrefix {
+			mux.Handle(prefix, http.StripPrefix(prefix, proxyHandler))
+		} else {
+			mux.Handle(prefix, proxyHandler)
+		}
 	}
 }
 

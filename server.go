@@ -51,35 +51,24 @@ func Handler(opts *Options) http.Handler {
 	}
 
 	// / (public)
-	root := http.NewServeMux()
-	root.Handle("GET /isalive", healthHandler("ALIVE"))
-	root.Handle("GET /isready", healthHandler("READY"))
+	rootMux := http.NewServeMux()
+	rootMux.Handle("GET /isalive", healthHandler("ALIVE"))
+	rootMux.Handle("GET /isready", healthHandler("READY"))
 
 	// /base/path/ (public)
-	base := http.NewServeMux()
-	base.Handle("GET /settings.js", settingsHandler(opts.EnvKeys))
+	baseMux := http.NewServeMux()
+	baseMux.Handle("GET /settings.js", settingsHandler(opts.EnvKeys))
 
 	// /base/path/ (protected)
-	protected := http.NewServeMux()
-	protected.Handle("/", staticHandler(rootDir, opts.DecoratorOpts))
+	protectedMux := http.NewServeMux()
+	protectedMux.Handle("/", staticHandler(rootDir, opts.DecoratorOpts))
 
 	// /base/path/proxy/prefix/ (protected)
-	if opts.Proxy != nil {
-		for prefix, proxyOpts := range *opts.Proxy {
-			slog.Info("hotbff: adding proxy", "prefix", prefix, "target", proxyOpts.Target)
-			proxyHandler := proxyOpts.Handler()
-			if proxyOpts.StripPrefix {
-				protected.Handle(prefix, http.StripPrefix(prefix, proxyHandler))
-			} else {
-				protected.Handle(prefix, proxyHandler)
-			}
-		}
-	}
+	proxy.Configure(opts.Proxy, protectedMux)
 
-	base.Handle("/", texas.Protected(opts.IDP, basePath, protected))
-
-	root.Handle(basePath, maybeStripPrefix(path.Join(basePath), base))
-	return root
+	baseMux.Handle("/", texas.Protected(opts.IDP, basePath, protectedMux))
+	rootMux.Handle(basePath, maybeStripPrefix(path.Join(basePath), baseMux))
+	return rootMux
 }
 
 func maybeStripPrefix(prefix string, h http.Handler) http.Handler {
