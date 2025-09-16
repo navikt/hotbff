@@ -23,21 +23,15 @@ func init() {
 
 // Options are the options for the server.
 type Options struct {
-	// BasePath is the base path to serve the application on. Defaults to "/".
-	BasePath string
-	// RootDir is the directory to serve static files from. Defaults to "dist".
-	RootDir string
-	// DecoratorOpts are the options for the HTML decorator.
-	DecoratorOpts *decorator.Options
-	// Proxy is the map of proxy options.
-	Proxy proxy.Map
-	// IDP is the identity provider to use for token validation. If empty, no validation is performed.
-	IDP texas.IdentityProvider
-	// EnvKeys is the list of environment variable keys to expose to the frontend.
-	EnvKeys []string
+	BasePath      string                 // the base path to serve the application on, defaults to "/"
+	RootDir       string                 // the directory to serve static files from, defaults to "dist"
+	DecoratorOpts *decorator.Options     // options for the HTML decorator
+	Proxy         proxy.Map              // map of proxy options keyed by URL prefix
+	IDP           texas.IdentityProvider // identity provider to use for token validation, if empty, no validation is performed
+	EnvKeys       []string               // list of environment variable keys to expose to the frontend
 }
 
-// Start starts the HTTP server with the given options.
+// Start starts the HTTP server with the given [Options].
 func Start(opts *Options) {
 	slog.Info("hotbff: starting server", "address", addr, "basePath", opts.BasePath, "rootDir", opts.RootDir)
 	err := http.ListenAndServe(addr, Handler(opts))
@@ -47,7 +41,7 @@ func Start(opts *Options) {
 	}
 }
 
-// Handler returns an handler that serves the application with the given options.
+// Handler returns a [http.Handler] that serves the application with the given [Options].
 func Handler(opts *Options) http.Handler {
 	basePath := opts.BasePath
 	rootDir := opts.RootDir

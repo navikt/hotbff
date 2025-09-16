@@ -8,7 +8,7 @@ import (
 	"path"
 )
 
-// Protected wraps a handler with token-based authentication using the provided identity provider.
+// Protected wraps a [http.Handler] with token-based authentication using the provided [IdentityProvider].
 // If the identity provider is not set, the handler is returned as is.
 // If the token is missing or invalid, the user is redirected to the login page.
 func Protected(idp IdentityProvider, basePath string, next http.Handler) http.Handler {

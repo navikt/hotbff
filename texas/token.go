@@ -10,7 +10,7 @@ import (
 
 const HeaderAuthorization = "Authorization"
 
-// TokenFromRequest extracts a bearer token from the Authorization header of an HTTP request.
+// TokenFromRequest extracts a bearer token from the Authorization header of an [http.Request].
 // It returns the token string and a boolean indicating whether a bearer token was present.
 // This function does not validate the token in any way.
 func TokenFromRequest(req *http.Request) (token string, ok bool) {
@@ -31,7 +31,7 @@ type JWT struct {
 }
 
 // ParseJWT parses a JWT string into its components: header, claims, and signature.
-// It returns a JWT struct and an error if the parsing fails.
+// It returns a [JWT] and an [error] if the parsing fails.
 func ParseJWT(jwtStr string) (*JWT, error) {
 	parts := strings.Split(jwtStr, ".")
 	if len(parts) != 3 {

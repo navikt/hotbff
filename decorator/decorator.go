@@ -11,8 +11,7 @@ import (
 	"os"
 )
 
-// Fetch fetches the decorator elements using the given options.
-// It returns an Elements struct containing HTML snippets.
+// Fetch retrieves decorator [Elements] using the given [Options].
 func Fetch(ctx context.Context, opts *Options) (*Elements, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, getDecoratorURL(), nil)
 	if err != nil {

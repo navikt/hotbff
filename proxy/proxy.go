@@ -14,14 +14,10 @@ import (
 
 // Options are the options for the proxy.
 type Options struct {
-	// Target is the target URL to proxy to.
-	Target string `json:"target"`
-	// StripPrefix indicates whether to strip the prefix from the request URL.
-	StripPrefix bool `json:"stripPrefix"`
-	// IDP is the identity provider to use for token exchange. If empty, no token exchange is performed.
-	IDP texas.IdentityProvider `json:"idp"`
-	// IDPTarget is the target audience used in the token exchange. Required if IDP is set.
-	IDPTarget string `json:"idpTarget"`
+	Target      string                 `json:"target"`      // the URL to proxy to (backend)
+	StripPrefix bool                   `json:"stripPrefix"` // whether to strip the prefix from the request URL
+	IDP         texas.IdentityProvider `json:"idp"`         // IDP for token exchange, if empty, no token exchange is performed
+	IDPTarget   string                 `json:"idpTarget"`   // the target audience used in the token exchange, required if IDP is set
 }
 
 // Handler returns a handler that proxies requests to the target URL.
@@ -63,10 +59,10 @@ func newTokenExchangeReverseProxy(target *url.URL, idp texas.IdentityProvider, i
 	}
 }
 
-// Map is a map of proxy Options keyed by URL prefix.
+// Map is a map of proxy [Options] keyed by URL prefix.
 type Map map[string]*Options
 
-// Configure adds proxy handlers to the given ServeMux based on the provided Map.
+// Configure adds proxy handlers to the given [http.ServeMux] based on the provided [Map].
 func Configure(proxy Map, mux *http.ServeMux) {
 	if proxy == nil {
 		slog.Info("proxy: no proxy")

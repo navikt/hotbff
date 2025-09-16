@@ -23,10 +23,10 @@ func Equal[T comparable](t *testing.T, got, expected T) {
 	}
 }
 
-func NotEqual[T comparable](t *testing.T, got, unexpected T) {
+func NotEqual[T comparable](t *testing.T, got, illegal T) {
 	t.Helper()
-	if got == unexpected {
-		t.Errorf("assert.NotEqual: got unexpected value %v", unexpected)
+	if got == illegal {
+		t.Errorf("assert.NotEqual: got %v", got)
 	}
 }
 
