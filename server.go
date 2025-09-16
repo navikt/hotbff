@@ -30,11 +30,11 @@ type Options struct {
 	// DecoratorOpts are the options for the HTML decorator.
 	DecoratorOpts *decorator.Options
 	// Proxy is the map of proxy options.
-	Proxy *proxy.Map
+	Proxy proxy.Map
 	// IDP is the identity provider to use for token validation. If empty, no validation is performed.
 	IDP texas.IdentityProvider
 	// EnvKeys is the list of environment variable keys to expose to the frontend.
-	EnvKeys *[]string
+	EnvKeys []string
 }
 
 // Start starts the HTTP server with the given options.

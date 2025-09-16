@@ -63,16 +63,16 @@ func newTokenExchangeReverseProxy(target *url.URL, idp texas.IdentityProvider, i
 	}
 }
 
-// Map is a map of proxy options keyed by URL prefix.
+// Map is a map of proxy Options keyed by URL prefix.
 type Map map[string]*Options
 
 // Configure adds proxy handlers to the given ServeMux based on the provided Map.
-func Configure(pm *Map, mux *http.ServeMux) {
+func Configure(pm Map, mux *http.ServeMux) {
 	if pm == nil {
 		slog.Info("proxy: no proxy")
 		return
 	}
-	for prefix, opts := range *pm {
+	for prefix, opts := range pm {
 		slog.Info("proxy: adding proxy", "prefix", prefix, "target", opts.Target)
 		proxyHandler := opts.Handler()
 		if opts.StripPrefix {

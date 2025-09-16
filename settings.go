@@ -7,11 +7,11 @@ import (
 	"os"
 )
 
-func settingsHandler(envKeys *[]string) http.Handler {
+func settingsHandler(envKeys []string) http.Handler {
 	s := make(map[string]any)
 	allEnvKeys := defaultEnvKeys
 	if envKeys != nil {
-		allEnvKeys = append(defaultEnvKeys, *envKeys...)
+		allEnvKeys = append(defaultEnvKeys, envKeys...)
 	}
 	for _, key := range allEnvKeys {
 		s[key] = parseEnv(key)
