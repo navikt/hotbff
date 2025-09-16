@@ -1,6 +1,8 @@
 package texas
 
 import (
+	"context"
+	"errors"
 	"log/slog"
 	"net/http"
 	"path"
@@ -15,8 +17,8 @@ func Protected(idp IdentityProvider, basePath string, next http.Handler) http.Ha
 		return next
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		token, ok := TokenFromRequest(req)
 		ctx := req.Context()
+		token, ok := TokenFromRequest(req)
 		if !ok {
 			slog.DebugContext(ctx, "texas: unauthorized: token missing", "idp", idp)
 			loginRedirect(w, req, basePath)
@@ -24,8 +26,12 @@ func Protected(idp IdentityProvider, basePath string, next http.Handler) http.Ha
 		}
 		ti, err := IntrospectToken(ctx, idp, token)
 		if err != nil {
-			slog.ErrorContext(ctx, "texas: error", "idp", idp, "error", err)
-			w.WriteHeader(http.StatusInternalServerError)
+			if errors.Is(err, context.Canceled) {
+				w.WriteHeader(http.StatusRequestTimeout)
+			} else {
+				slog.ErrorContext(ctx, "texas: error", "idp", idp, "error", err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
 			return
 		}
 		if !ti.Active {
@@ -39,10 +45,11 @@ func Protected(idp IdentityProvider, basePath string, next http.Handler) http.Ha
 }
 
 func loginRedirect(w http.ResponseWriter, req *http.Request, basePath string) {
+	ctx := req.Context()
 	url := path.Join(basePath, "/oauth2/login")
 	if basePath != "/" {
 		url = url + "?redirect=" + basePath
 	}
-	slog.DebugContext(req.Context(), "texas: login redirect", "url", url)
+	slog.DebugContext(ctx, "texas: login redirect", "url", url)
 	http.Redirect(w, req, url, http.StatusTemporaryRedirect)
 }

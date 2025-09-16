@@ -1,6 +1,8 @@
 package decorator
 
 import (
+	"context"
+	"errors"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -20,8 +22,12 @@ func Handler(name string, opts *Options) http.Handler {
 		ctx := req.Context()
 		elems, err := Fetch(ctx, opts)
 		if err != nil {
-			slog.ErrorContext(ctx, "decorator: failed fetching elements", "error", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			if errors.Is(err, context.Canceled) {
+				w.WriteHeader(http.StatusRequestTimeout)
+			} else {
+				slog.ErrorContext(ctx, "decorator: failed fetching elements", "error", err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
 			return
 		}
 		w.Header().Set("Cache-Control", "max-age=3600, private")

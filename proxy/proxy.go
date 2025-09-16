@@ -1,6 +1,8 @@
 package proxy
 
 import (
+	"context"
+	"errors"
 	"log/slog"
 	"net/http"
 	"net/http/httputil"
@@ -51,7 +53,9 @@ func newTokenExchangeReverseProxy(target *url.URL, idp texas.IdentityProvider, i
 			}
 			ts, err := texas.ExchangeToken(ctx, idp, idpTarget, user.Token)
 			if err != nil {
-				slog.ErrorContext(ctx, "proxy: token exchange error", "idp", idp, "idpTarget", idpTarget, "error", err)
+				if !errors.Is(err, context.Canceled) {
+					slog.ErrorContext(ctx, "proxy: token exchange error", "idp", idp, "idpTarget", idpTarget, "error", err)
+				}
 				return
 			}
 			r.Out.Header.Set("Authorization", "Bearer "+ts.AccessToken)
