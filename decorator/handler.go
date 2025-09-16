@@ -30,7 +30,6 @@ func Handler(name string, opts *Options) http.Handler {
 			}
 			return
 		}
-		w.Header().Set("Cache-Control", "max-age=3600, private")
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		if err := tmpl.Execute(w, &elems); err != nil {
 			slog.ErrorContext(ctx, "decorator: failed executing template", "error", err)

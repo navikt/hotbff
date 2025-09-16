@@ -4,6 +4,8 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/navikt/hotbff/internal/assert"
@@ -33,9 +35,15 @@ func TestHandlerIsReady(t *testing.T) {
 
 func callHandler(t *testing.T, req *http.Request) *http.Response {
 	t.Helper()
+
+	rootDir := t.TempDir()
+	indexPath := filepath.Join(rootDir, "index.html")
+	err := os.WriteFile(indexPath, []byte("<!DOCTYPE html><html><body>test</body></html>"), 0644)
+	assert.Nil(t, err)
+
 	h := Handler(&Options{
 		BasePath: "/",
-		RootDir:  t.TempDir(),
+		RootDir:  rootDir,
 	})
 
 	w := httptest.NewRecorder()

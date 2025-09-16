@@ -1,9 +1,12 @@
 package hotbff
 
 import (
+	"bytes"
 	"log/slog"
 	"net/http"
-	"path"
+	"os"
+	"path/filepath"
+	"time"
 
 	"github.com/navikt/hotbff/decorator"
 )
@@ -30,11 +33,17 @@ func staticHandler(rootDir string, opts *decorator.Options) http.Handler {
 }
 
 func indexHandler(rootDir string, opts *decorator.Options) http.Handler {
-	name := path.Join(rootDir, "index.html")
+	name := filepath.Join(rootDir, "index.html")
 	if opts == nil {
+		data, err := os.ReadFile(name)
+		if err != nil {
+			slog.Error("hotbff: failed reading file", "name", name, "error", err)
+			os.Exit(1)
+		}
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			http.ServeFile(w, req, name)
+			content := bytes.NewReader(data)
+			http.ServeContent(w, req, "index.html", time.Now(), content)
 		})
 	}
 	return decorator.Handler(name, opts)
