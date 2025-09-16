@@ -4,18 +4,21 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 )
 
+// GetElements fetches the decorator elements using the given options.
+// It returns an Elements struct containing HTML snippets.
 func GetElements(opts *Options) (*Elements, error) {
 	req, err := http.NewRequest(http.MethodGet, getDecoratorURL(), nil)
 	if err != nil {
 		return nil, err
 	}
-	q := req.URL.Query()
-	q.Set("context", opts.Context)
-	req.URL.RawQuery = q.Encode()
+	req.URL.RawQuery = opts.Query().Encode()
+	slog.Debug("decorator: fetching elements", "url", req.URL.String())
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -35,6 +38,12 @@ func GetElements(opts *Options) (*Elements, error) {
 
 type Options struct {
 	Context string
+}
+
+func (o *Options) Query() url.Values {
+	q := url.Values{}
+	q.Set("context", o.Context)
+	return q
 }
 
 type Elements struct {
