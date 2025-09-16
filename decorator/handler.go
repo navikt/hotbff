@@ -7,17 +7,17 @@ import (
 	"os"
 )
 
-// TemplateHandler returns a handler that renders the given template file
-// decorated with elements fetched using the provided options.
+// Handler returns a handler that renders the given template file
+// decorated with elements fetched using the given options.
 // If fetching the elements fails, it returns a 500 Internal Server Error.
-func TemplateHandler(name string, opts *Options) http.Handler {
+func Handler(name string, opts *Options) http.Handler {
 	tmpl, err := template.ParseFiles(name)
 	if err != nil {
 		slog.Error("decorator: failed parsing template", "name", name, "error", err)
 		os.Exit(1)
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		elems, err := GetElements(opts)
+		elems, err := Fetch(opts)
 		if err != nil {
 			slog.Error("decorator: failed fetching elements", "error", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)

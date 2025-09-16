@@ -9,20 +9,20 @@ import (
 )
 
 func staticHandler(rootDir string, opts *decorator.Options) http.Handler {
-	idx := indexHandler(rootDir, opts)
+	index := indexHandler(rootDir, opts)
 	fs := http.FileServer(http.Dir(rootDir))
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		slog.Debug("hotbff: serving static file", "path", req.URL.Path)
 		switch req.URL.Path {
-		// index.html må kanskje dekoreres, fs vil ikke gjøre dette
+		// index.html might need decoration, http.FileServer will not do that
 		case "", "/", "index.html", "/index.html":
-			idx.ServeHTTP(w, req)
+			index.ServeHTTP(w, req)
 		default:
 			r := &statusCodeRecorder{ResponseWriter: w}
 			fs.ServeHTTP(r, req)
-			// vi har client side routing, overstyr 404 til index.html
+			// we have client side routing, override 404 to index.html
 			if r.statusCode == http.StatusNotFound {
-				idx.ServeHTTP(w, req)
+				index.ServeHTTP(w, req)
 			}
 		}
 	})
@@ -36,7 +36,7 @@ func indexHandler(rootDir string, opts *decorator.Options) http.Handler {
 			http.ServeFile(w, req, name)
 		})
 	}
-	return decorator.TemplateHandler(name, opts)
+	return decorator.Handler(name, opts)
 }
 
 type statusCodeRecorder struct {

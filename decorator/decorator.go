@@ -10,9 +10,9 @@ import (
 	"os"
 )
 
-// GetElements fetches the decorator elements using the given options.
+// Fetch fetches the decorator elements using the given options.
 // It returns an Elements struct containing HTML snippets.
-func GetElements(opts *Options) (*Elements, error) {
+func Fetch(opts *Options) (*Elements, error) {
 	req, err := http.NewRequest(http.MethodGet, getDecoratorURL(), nil)
 	if err != nil {
 		return nil, err

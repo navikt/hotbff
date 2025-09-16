@@ -33,7 +33,7 @@ func main() {
 			"/api/": &proxy.Options{
 				Target:      os.Getenv("API_URL"),
 				StripPrefix: false,
-                // Identity provider for token exchange
+                // Identity provider for token exchange.
 				IDP:         texas.TokenX,
 				IDPTarget:   os.Getenv("API_SCOPE"),
 			},
@@ -43,9 +43,9 @@ func main() {
 				StripPrefix: true,
 			},
 		},
-        // Identity provider for validering av token
-		IDP: texas.IdPorten,
-        // Disse blir tilgengelige i window.appSettings hvis f.eks. index.html laster inn /{BasePath}/settings.js
+        // Identity provider for validering av token.
+		IDP: texas.IDPorten,
+        // Disse blir tilgengelige i window.appSettings hvis f.eks. index.html laster inn /{BasePath}/settings.js.
 		EnvKeys: &[]string{
             "SOME_ENV_A",
             "SOME_ENV_B",

@@ -12,8 +12,8 @@ import (
 type IdentityProvider string
 
 const (
-	EntraId      IdentityProvider = "azuread"
-	IdPorten     IdentityProvider = "idporten"
+	EntraID      IdentityProvider = "azuread"
+	IDPorten     IdentityProvider = "idporten"
 	Maskinporten IdentityProvider = "maskinporten"
 	TokenX       IdentityProvider = "tokenx"
 )

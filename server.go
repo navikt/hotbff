@@ -47,7 +47,7 @@ func Start(opts *Options) {
 	}
 }
 
-// Handler returns an http.Handler that serves the application with the given options.
+// Handler returns an handler that serves the application with the given options.
 func Handler(opts *Options) http.Handler {
 	basePath := opts.BasePath
 	rootDir := opts.RootDir

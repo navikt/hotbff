@@ -13,7 +13,7 @@ func TestGetToken(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		err := req.ParseForm()
 		assert.Nil(t, err)
-		assert.Equal(t, req.FormValue(idpFormKey), string(EntraId))
+		assert.Equal(t, req.FormValue(idpFormKey), string(EntraID))
 		assert.Equal(t, req.FormValue(targetFormKey), target)
 		_, _ = w.Write([]byte(`{"access_token":"accessToken"}`))
 	}))
@@ -21,7 +21,7 @@ func TestGetToken(t *testing.T) {
 
 	tokenURL = server.URL
 
-	ts, err := GetToken(EntraId, target)
+	ts, err := GetToken(EntraID, target)
 	assert.Nil(t, err)
 	assert.Equal(t, ts.AccessToken, "accessToken")
 }
@@ -51,7 +51,7 @@ func TestIntrospectToken(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		err := req.ParseForm()
 		assert.Nil(t, err)
-		assert.Equal(t, req.FormValue(idpFormKey), string(IdPorten))
+		assert.Equal(t, req.FormValue(idpFormKey), string(IDPorten))
 		assert.Equal(t, req.FormValue(tokenFormKey), token)
 		_, _ = w.Write([]byte(`{"active":true}`))
 	}))
@@ -59,7 +59,7 @@ func TestIntrospectToken(t *testing.T) {
 
 	tokenIntrospectionURL = server.URL
 
-	ti, err := IntrospectToken(IdPorten, token)
+	ti, err := IntrospectToken(IDPorten, token)
 	assert.Nil(t, err)
 	assert.True(t, ti.Active)
 }
