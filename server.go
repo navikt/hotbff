@@ -23,8 +23,8 @@ func init() {
 
 // Options for the server.
 type Options struct {
-	BasePath      string                 // the base path to serve the application on, defaults to "/"
-	RootDir       string                 // the directory to serve static files from, defaults to "dist"
+	BasePath      string                 // the base path to serve the application on (defaults to "/")
+	RootDir       string                 // the directory to serve static files from (defaults to "dist")
 	DecoratorOpts *decorator.Options     // options for the HTML decorator
 	Proxy         proxy.Map              // map of proxy options keyed by URL prefix
 	IDP           texas.IdentityProvider // identity provider to use for token validation (if empty, no validation is performed)
