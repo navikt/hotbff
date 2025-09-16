@@ -16,14 +16,14 @@ type Target struct {
 	Cluster     string
 }
 
-func (f Target) String() string {
-	c := f.Cluster
+func (t Target) String() string {
+	c := t.Cluster
 	if c == "" {
 		c = cluster
 	}
-	n := f.Namespace
+	n := t.Namespace
 	if n == "" {
 		n = namespace
 	}
-	return fmt.Sprintf("api://%s.%s.%s/.default", c, n, f.Application)
+	return fmt.Sprintf("api://%s.%s.%s/.default", c, n, t.Application)
 }

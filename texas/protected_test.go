@@ -34,7 +34,7 @@ func callProtectedHandler(t *testing.T, userToken string, active bool) *http.Res
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	if userToken != "" {
-		req.Header.Set("Authorization", "Bearer "+userToken)
+		req.Header.Set(HeaderAuthorization, "Bearer "+userToken)
 	}
 
 	h := Protected(TokenX, "/", http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {

@@ -19,6 +19,7 @@ const (
 )
 
 // GetToken retrieves a token from the identity provider for the given target audience.
+// It returns a TokenSet struct containing the new token.
 func GetToken(idp IdentityProvider, target string) (*TokenSet, error) {
 	fv := newFormValues(idp)
 	fv.Set(targetFormKey, target)
@@ -31,6 +32,7 @@ func GetToken(idp IdentityProvider, target string) (*TokenSet, error) {
 }
 
 // ExchangeToken exchanges the user's token for a new token from the identity provider for the given target audience.
+// It returns a TokenSet struct containing the new token.
 func ExchangeToken(idp IdentityProvider, target string, userToken string) (*TokenSet, error) {
 	fv := newFormValues(idp)
 	fv.Set(targetFormKey, target)
@@ -44,6 +46,7 @@ func ExchangeToken(idp IdentityProvider, target string, userToken string) (*Toke
 }
 
 // IntrospectToken validates the given token from the identity provider.
+// It returns a TokenIntrospection struct indicating whether the token is active.
 func IntrospectToken(idp IdentityProvider, token string) (*TokenIntrospection, error) {
 	fv := newFormValues(idp)
 	fv.Set(tokenFormKey, token)
@@ -79,13 +82,13 @@ var (
 )
 
 func newFormValues(idp IdentityProvider) *url.Values {
-	data := &url.Values{}
-	data.Set(idpFormKey, string(idp))
-	return data
+	fv := &url.Values{}
+	fv.Set(idpFormKey, string(idp))
+	return fv
 }
 
-func post(url string, data *url.Values, v any) error {
-	res, err := http.Post(url, "application/x-www-form-urlencoded", strings.NewReader(data.Encode()))
+func post(url string, fv *url.Values, v any) error {
+	res, err := http.Post(url, "application/x-www-form-urlencoded", strings.NewReader(fv.Encode()))
 	if err != nil {
 		return err
 	}
