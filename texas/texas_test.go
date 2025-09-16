@@ -21,7 +21,7 @@ func TestGetToken(t *testing.T) {
 
 	tokenURL = server.URL
 
-	ts, err := GetToken(EntraID, target)
+	ts, err := GetToken(t.Context(), EntraID, target)
 	assert.Nil(t, err)
 	assert.Equal(t, ts.AccessToken, "accessToken")
 }
@@ -41,7 +41,7 @@ func TestExchangeToken(t *testing.T) {
 
 	tokenExchangeURL = server.URL
 
-	ts, err := ExchangeToken(TokenX, target, userToken)
+	ts, err := ExchangeToken(t.Context(), TokenX, target, userToken)
 	assert.Nil(t, err)
 	assert.Equal(t, ts.AccessToken, "accessToken")
 }
@@ -59,7 +59,7 @@ func TestIntrospectToken(t *testing.T) {
 
 	tokenIntrospectionURL = server.URL
 
-	ti, err := IntrospectToken(IDPorten, token)
+	ti, err := IntrospectToken(t.Context(), IDPorten, token)
 	assert.Nil(t, err)
 	assert.True(t, ti.Active)
 }

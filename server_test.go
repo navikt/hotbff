@@ -32,6 +32,7 @@ func TestHandlerIsReady(t *testing.T) {
 }
 
 func callHandler(t *testing.T, req *http.Request) *http.Response {
+	t.Helper()
 	h := Handler(&Options{
 		BasePath: "/",
 		RootDir:  t.TempDir(),

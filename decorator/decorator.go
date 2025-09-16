@@ -1,6 +1,7 @@
 package decorator
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -12,8 +13,8 @@ import (
 
 // Fetch fetches the decorator elements using the given options.
 // It returns an Elements struct containing HTML snippets.
-func Fetch(opts *Options) (*Elements, error) {
-	req, err := http.NewRequest(http.MethodGet, getDecoratorURL(), nil)
+func Fetch(ctx context.Context, opts *Options) (*Elements, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, getDecoratorURL(), nil)
 	if err != nil {
 		return nil, err
 	}

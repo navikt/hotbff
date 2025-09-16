@@ -22,7 +22,7 @@ type Options struct {
 	IDPTarget string `json:"idpTarget"`
 }
 
-// Handler returns an http.Handler that proxies requests to the target URL.
+// Handler returns a handler that proxies requests to the target URL.
 func (t *Options) Handler() http.Handler {
 	target, err := url.Parse(t.Target)
 	if err != nil {
@@ -43,14 +43,15 @@ func newTokenExchangeReverseProxy(target *url.URL, idp texas.IdentityProvider, i
 	return &httputil.ReverseProxy{
 		Rewrite: func(r *httputil.ProxyRequest) {
 			r.SetURL(target)
-			user := texas.FromContext(r.In.Context())
+			ctx := r.In.Context()
+			user := texas.FromContext(ctx)
 			if !user.Authenticated {
-				slog.WarnContext(r.In.Context(), "proxy: user unauthenticated", "idp", idp, "idpTarget", idpTarget)
+				slog.WarnContext(ctx, "proxy: user unauthenticated", "idp", idp, "idpTarget", idpTarget)
 				return
 			}
-			ts, err := texas.ExchangeToken(idp, idpTarget, user.Token)
+			ts, err := texas.ExchangeToken(ctx, idp, idpTarget, user.Token)
 			if err != nil {
-				slog.ErrorContext(r.In.Context(), "proxy: token exchange error", "idp", idp, "idpTarget", idpTarget, "error", err)
+				slog.ErrorContext(ctx, "proxy: token exchange error", "idp", idp, "idpTarget", idpTarget, "error", err)
 				return
 			}
 			r.Out.Header.Set("Authorization", "Bearer "+ts.AccessToken)

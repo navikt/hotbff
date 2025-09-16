@@ -11,19 +11,19 @@ import (
 func TestProtectedActiveToken(t *testing.T) {
 	res := callProtectedHandler(t, "userToken", true)
 	assert.Equal(t, res.StatusCode, http.StatusOK)
-	assert.Equal(t, res.Header.Get("Location"), "")
+	assert.Equal(t, getLocation(t, res), "")
 }
 
 func TestProtectedInactiveToken(t *testing.T) {
 	res := callProtectedHandler(t, "userToken", false)
 	assert.Equal(t, res.StatusCode, http.StatusTemporaryRedirect)
-	assert.Equal(t, res.Header.Get("Location"), "/oauth2/login")
+	assert.Equal(t, getLocation(t, res), "/oauth2/login")
 }
 
 func TestProtectedMissingToken(t *testing.T) {
 	res := callProtectedHandler(t, "", true)
 	assert.Equal(t, res.StatusCode, http.StatusTemporaryRedirect)
-	assert.Equal(t, res.Header.Get("Location"), "/oauth2/login")
+	assert.Equal(t, getLocation(t, res), "/oauth2/login")
 }
 
 func callProtectedHandler(t *testing.T, userToken string, active bool) *http.Response {
@@ -58,4 +58,9 @@ func texasIntrospectionServer(t *testing.T, active bool) *httptest.Server {
 	}))
 	tokenIntrospectionURL = s.URL
 	return s
+}
+
+func getLocation(t *testing.T, res *http.Response) string {
+	t.Helper()
+	return res.Header.Get("Location")
 }

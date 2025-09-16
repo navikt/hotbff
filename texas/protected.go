@@ -16,23 +16,24 @@ func Protected(idp IdentityProvider, basePath string, next http.Handler) http.Ha
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		token, ok := TokenFromRequest(req)
+		ctx := req.Context()
 		if !ok {
-			slog.DebugContext(req.Context(), "texas: unauthorized: token missing", "idp", idp)
+			slog.DebugContext(ctx, "texas: unauthorized: token missing", "idp", idp)
 			loginRedirect(w, req, basePath)
 			return
 		}
-		ti, err := IntrospectToken(idp, token)
+		ti, err := IntrospectToken(ctx, idp, token)
 		if err != nil {
-			slog.ErrorContext(req.Context(), "texas: error", "idp", idp, "error", err)
+			slog.ErrorContext(ctx, "texas: error", "idp", idp, "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		if !ti.Active {
-			slog.DebugContext(req.Context(), "texas: unauthorized: token invalid", "idp", idp)
+			slog.DebugContext(ctx, "texas: unauthorized: token invalid", "idp", idp)
 			loginRedirect(w, req, basePath)
 			return
 		}
-		ctx := NewContext(req.Context(), &User{Authenticated: true, Token: token})
+		ctx = NewContext(ctx, &User{Authenticated: true, Token: token})
 		next.ServeHTTP(w, req.WithContext(ctx))
 	})
 }

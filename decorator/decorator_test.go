@@ -7,7 +7,7 @@ import (
 )
 
 func TestGet(t *testing.T) {
-	elems, err := Fetch(&Options{Context: "privatperson"})
+	elems, err := Fetch(t.Context(), &Options{Context: "privatperson"})
 	assert.Nil(t, err)
 	assert.NotEqual(t, elems.HeadAssets, "")
 	assert.NotEqual(t, elems.Header, "")

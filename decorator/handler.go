@@ -17,16 +17,17 @@ func Handler(name string, opts *Options) http.Handler {
 		os.Exit(1)
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		elems, err := Fetch(opts)
+		ctx := req.Context()
+		elems, err := Fetch(ctx, opts)
 		if err != nil {
-			slog.Error("decorator: failed fetching elements", "error", err)
+			slog.ErrorContext(ctx, "decorator: failed fetching elements", "error", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		w.Header().Set("Cache-Control", "max-age=3600, private")
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		if err := tmpl.Execute(w, &elems); err != nil {
-			slog.Error("decorator: failed executing template", "error", err)
+			slog.ErrorContext(ctx, "decorator: failed executing template", "error", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	})

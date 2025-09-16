@@ -12,7 +12,7 @@ func staticHandler(rootDir string, opts *decorator.Options) http.Handler {
 	index := indexHandler(rootDir, opts)
 	fs := http.FileServer(http.Dir(rootDir))
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		slog.Debug("hotbff: serving static file", "path", req.URL.Path)
+		slog.DebugContext(req.Context(), "hotbff: serving static file", "path", req.URL.Path)
 		switch req.URL.Path {
 		// index.html might need decoration, http.FileServer will not do that
 		case "", "/", "index.html", "/index.html":
