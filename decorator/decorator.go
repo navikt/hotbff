@@ -36,16 +36,19 @@ func Fetch(ctx context.Context, opts *Options) (*Elements, error) {
 	return elems, nil
 }
 
+// Options for the decorator.
 type Options struct {
 	Context string
 }
 
+// Query is the decorator [Options] expressed as URL query parameters.
 func (o *Options) Query() url.Values {
 	q := url.Values{}
 	q.Set("context", o.Context)
 	return q
 }
 
+// Elements fetched from the decorator.
 type Elements struct {
 	HeadAssets template.HTML `json:"headAssets"`
 	Header     template.HTML `json:"header"`

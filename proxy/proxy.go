@@ -12,12 +12,12 @@ import (
 	"github.com/navikt/hotbff/texas"
 )
 
-// Options are the options for the proxy.
+// Options for the proxy.
 type Options struct {
 	Target      string                 `json:"target"`      // the URL to proxy to (backend)
 	StripPrefix bool                   `json:"stripPrefix"` // whether to strip the prefix from the request URL
-	IDP         texas.IdentityProvider `json:"idp"`         // IDP for token exchange, if empty, no token exchange is performed
-	IDPTarget   string                 `json:"idpTarget"`   // the target audience used in the token exchange, required if IDP is set
+	IDP         texas.IdentityProvider `json:"idp"`         // IDP for token exchange (if empty, no token exchange is performed)
+	IDPTarget   string                 `json:"idpTarget"`   // the target audience used in the token exchange (required if IDP is set)
 }
 
 // Handler returns a handler that proxies requests to the target URL.

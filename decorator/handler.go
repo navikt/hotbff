@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-// Handler returns a [http.Handler] that renders the named template file
+// Handler returns a handler that renders the named template file
 // decorated with [Elements] fetched using the given [Options].
 // If fetching the elements fails, it returns a 500 Internal Server Error.
 func Handler(name string, opts *Options) http.Handler {

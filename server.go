@@ -21,13 +21,13 @@ func init() {
 	}
 }
 
-// Options are the options for the server.
+// Options for the server.
 type Options struct {
 	BasePath      string                 // the base path to serve the application on, defaults to "/"
 	RootDir       string                 // the directory to serve static files from, defaults to "dist"
 	DecoratorOpts *decorator.Options     // options for the HTML decorator
 	Proxy         proxy.Map              // map of proxy options keyed by URL prefix
-	IDP           texas.IdentityProvider // identity provider to use for token validation, if empty, no validation is performed
+	IDP           texas.IdentityProvider // identity provider to use for token validation (if empty, no validation is performed)
 	EnvKeys       []string               // list of environment variable keys to expose to the frontend
 }
 
@@ -41,7 +41,7 @@ func Start(opts *Options) {
 	}
 }
 
-// Handler returns a [http.Handler] that serves the application with the given [Options].
+// Handler returns a handler that serves the application with the given [Options].
 func Handler(opts *Options) http.Handler {
 	basePath := opts.BasePath
 	rootDir := opts.RootDir
