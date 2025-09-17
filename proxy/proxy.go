@@ -16,7 +16,7 @@ import (
 type Options struct {
 	Target      string                 `json:"target"`      // the URL to proxy to (backend)
 	StripPrefix bool                   `json:"stripPrefix"` // whether to strip the prefix from the request URL
-	IDP         texas.IdentityProvider `json:"idp"`         // IDP for token exchange (if empty, no token exchange is performed)
+	IDP         texas.IdentityProvider `json:"idp"`         // identity provider for token exchange (if empty, no token exchange is performed)
 	IDPTarget   string                 `json:"idpTarget"`   // the target audience used in the token exchange (required if IDP is set)
 }
 
@@ -54,7 +54,7 @@ func newTokenExchangeReverseProxy(target *url.URL, idp texas.IdentityProvider, i
 				}
 				return
 			}
-			r.Out.Header.Set("Authorization", "Bearer "+ts.AccessToken)
+			r.Out.Header.Set(texas.HeaderAuthorization, "Bearer "+ts.AccessToken)
 		},
 	}
 }

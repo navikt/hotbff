@@ -24,12 +24,11 @@ const (
 func GetToken(ctx context.Context, idp IdentityProvider, target string) (*TokenSet, error) {
 	fv := newFormValues(idp)
 	fv.Set(targetFormKey, target)
-	var ts *TokenSet
-	err := post(ctx, tokenURL, fv, &ts)
-	if err != nil {
+	var ts TokenSet
+	if err := post(ctx, tokenURL, fv, &ts); err != nil {
 		return nil, err
 	}
-	return ts, nil
+	return &ts, nil
 }
 
 // ExchangeToken exchanges the user's token for a new token from the identity provider for the given target audience.
@@ -38,12 +37,11 @@ func ExchangeToken(ctx context.Context, idp IdentityProvider, target string, use
 	fv := newFormValues(idp)
 	fv.Set(targetFormKey, target)
 	fv.Set(userTokenFormKey, userToken)
-	var ts *TokenSet
-	err := post(ctx, tokenExchangeURL, fv, &ts)
-	if err != nil {
+	var ts TokenSet
+	if err := post(ctx, tokenExchangeURL, fv, &ts); err != nil {
 		return nil, err
 	}
-	return ts, nil
+	return &ts, nil
 }
 
 // IntrospectToken validates the given token from the identity provider.
@@ -51,12 +49,11 @@ func ExchangeToken(ctx context.Context, idp IdentityProvider, target string, use
 func IntrospectToken(ctx context.Context, idp IdentityProvider, token string) (*TokenIntrospection, error) {
 	fv := newFormValues(idp)
 	fv.Set(tokenFormKey, token)
-	var ti *TokenIntrospection
-	err := post(ctx, tokenIntrospectionURL, fv, &ti)
-	if err != nil {
+	var ti TokenIntrospection
+	if err := post(ctx, tokenIntrospectionURL, fv, &ti); err != nil {
 		return nil, err
 	}
-	return ti, nil
+	return &ti, nil
 }
 
 type TokenSet struct {

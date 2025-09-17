@@ -7,26 +7,25 @@ import (
 	"os"
 )
 
-func settingsHandler(envKeys []string) http.Handler {
-	s := make(map[string]any)
-	allEnvKeys := defaultEnvKeys
-	if envKeys != nil {
-		allEnvKeys = append(defaultEnvKeys, envKeys...)
+func settingsHandler(basePath string, envKeys []string) http.Handler {
+	s := map[string]any{"BASE_PATH": basePath}
+	for _, key := range defaultEnvKeys {
+		s[key] = parseEnv(key)
 	}
-	for _, key := range allEnvKeys {
+	for _, key := range envKeys {
 		s[key] = parseEnv(key)
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
-		_, err := fmt.Fprint(w, "window.appSettings = ")
-		if err != nil {
+		if _, err := fmt.Fprint(w, "window.appSettings = "); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 		enc := json.NewEncoder(w)
 		enc.SetIndent("", "  ")
-		err = enc.Encode(&s)
-		if err != nil {
+		if err := enc.Encode(s); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 	})
 }

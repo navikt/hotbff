@@ -29,28 +29,24 @@ func main() {
 	opts := &hotbff.Options{
 		BasePath: "/",
 		RootDir:  "dist",
-		Proxy: &proxy.Map{
+		Proxy: proxy.Map{
 			"/api/": &proxy.Options{
-				Target:      os.Getenv("API_URL"),
+				Target:      os.Getenv("API_URL"), // backend URL
 				StripPrefix: false,
-                // Identity provider for token exchange.
-				IDP:         texas.TokenX,
+				IDP:         texas.TokenX, // identity provider for token exchange
 				IDPTarget:   os.Getenv("API_SCOPE"),
 			},
-			"/public-api/": &proxy.Options{
+			"/other-api/": &proxy.Options{
 				Target:      os.Getenv("PUBLIC_API_URL"),
-                // true hvis kall som f.eks. /public-api/api skal skrives om til bare /api mot backend.
-				StripPrefix: true,
+				StripPrefix: true, // true hvis kall som f.eks. /other-api/api skal skrives om til bare /api
 			},
 		},
-        // Identity provider for validering av token.
-		IDP: texas.IDPorten,
-        // Disse blir tilgengelige i window.appSettings hvis f.eks. index.html laster inn /{BasePath}/settings.js.
-		EnvKeys: &[]string{
+		IDP: texas.IDPorten, // identity provider for validering av token
+		EnvKeys: []string{
             "SOME_ENV_A",
             "SOME_ENV_B",
             "SOME_ENV_C",
-		},
+		}, // disse blir tilgengelige i window.appSettings hvis f.eks. index.html laster inn /{BasePath}/settings.js
 	}
 	hotbff.Start(opts)
 }

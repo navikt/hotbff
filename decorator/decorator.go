@@ -18,7 +18,7 @@ func Fetch(ctx context.Context, opts *Options) (*Elements, error) {
 		return nil, err
 	}
 	req.URL.RawQuery = opts.Query().Encode()
-	slog.Debug("decorator: fetching elements", "url", req.URL.String())
+	slog.Debug("decorator: fetching elements", "url", req.URL)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -28,17 +28,16 @@ func Fetch(ctx context.Context, opts *Options) (*Elements, error) {
 	if res.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("decorator: unexpected statusCode: %d", res.StatusCode)
 	}
-	var elems *Elements
-	err = json.NewDecoder(res.Body).Decode(&elems)
-	if err != nil {
+	var elems Elements
+	if err := json.NewDecoder(res.Body).Decode(&elems); err != nil {
 		return nil, err
 	}
-	return elems, nil
+	return &elems, nil
 }
 
 // Options for the decorator.
 type Options struct {
-	Context string
+	Context string // "privatperson" | "arbeidsgiver" | "samarbeidspartner"
 }
 
 // Query is the decorator [Options] expressed as URL query parameters.
@@ -60,7 +59,6 @@ var (
 	cluster         = os.Getenv("NAIS_CLUSTER_NAME")
 	decoratorURL    = "http://nav-dekoratoren.personbruker/dekoratoren/ssr"
 	decoratorURLDev = "https://dekoratoren.ekstern.dev.nav.no/dekoratoren/ssr"
-	//decoratorURLProd = "https://www.nav.no/dekoratoren/ssr"
 )
 
 func getDecoratorURL() string {

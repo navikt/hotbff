@@ -42,7 +42,7 @@ func callHandler(t *testing.T, req *http.Request) *http.Response {
 	assert.Nil(t, err)
 
 	h := Handler(&Options{
-		BasePath: "/",
+		BasePath: "/test/",
 		RootDir:  rootDir,
 	})
 

@@ -28,7 +28,7 @@ type Options struct {
 	DecoratorOpts *decorator.Options     // options for the HTML decorator
 	Proxy         proxy.Map              // map of proxy options keyed by URL prefix
 	IDP           texas.IdentityProvider // identity provider to use for token validation (if empty, no validation is performed)
-	EnvKeys       []string               // list of environment variable keys to expose to the frontend
+	EnvKeys       []string               // list of environment variable keys to expose to the frontend (via "/settings.js")
 }
 
 // Start starts the HTTP server with the given [Options].
@@ -60,7 +60,7 @@ func Handler(opts *Options) http.Handler {
 
 	// /base/path/ (public)
 	baseMux := http.NewServeMux()
-	baseMux.Handle("GET /settings.js", settingsHandler(opts.EnvKeys))
+	baseMux.Handle("GET /settings.js", settingsHandler(basePath, opts.EnvKeys))
 
 	// /base/path/ (protected)
 	protectedMux := http.NewServeMux()

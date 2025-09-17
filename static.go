@@ -24,7 +24,7 @@ func staticHandler(rootDir string, opts *decorator.Options) http.Handler {
 		default:
 			r := &statusCodeRecorder{ResponseWriter: w}
 			fs.ServeHTTP(r, req)
-			// we have client side routing, override 404 to index.html
+			// we have client side routing, serve index.html instead of 404
 			if r.statusCode == http.StatusNotFound {
 				index.ServeHTTP(w, req)
 			}
@@ -43,7 +43,7 @@ func indexHandler(rootDir string, opts *decorator.Options) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			content := bytes.NewReader(data)
-			http.ServeContent(w, req, "index.html", time.Now(), content)
+			http.ServeContent(w, req, "index.html", time.Time{}, content)
 		})
 	}
 	return decorator.Handler(name, opts)
