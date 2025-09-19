@@ -1,6 +1,9 @@
 package assert
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func True(t *testing.T, got bool) {
 	t.Helper()
@@ -41,5 +44,26 @@ func NotNil(t *testing.T, got any) {
 	t.Helper()
 	if got == nil {
 		t.Fatalf("assert.NotNil: got nil")
+	}
+}
+
+func Contains(t *testing.T, s, substr string) {
+	t.Helper()
+	if !strings.Contains(s, substr) {
+		t.Errorf("assert.Contains: %q did not contain %q", s, substr)
+	}
+}
+
+func HasPrefix(t *testing.T, s, prefix string) {
+	t.Helper()
+	if !strings.HasPrefix(s, prefix) {
+		t.Errorf("assert.HasPrefix: %q did not have prefix %q", s, prefix)
+	}
+}
+
+func HasSuffix(t *testing.T, s, suffix string) {
+	t.Helper()
+	if !strings.HasSuffix(s, suffix) {
+		t.Errorf("assert.HasSuffix: %q did not have suffix %q", s, suffix)
 	}
 }

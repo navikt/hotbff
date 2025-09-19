@@ -31,7 +31,7 @@ func Handler(name string, opts *Options) http.Handler {
 			return
 		}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		if err := tmpl.Execute(w, &elems); err != nil {
+		if err := tmpl.Execute(w, elems); err != nil {
 			slog.ErrorContext(ctx, "decorator: failed executing template", "error", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
