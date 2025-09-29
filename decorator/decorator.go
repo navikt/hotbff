@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 )
 
 // Fetch retrieves decorator [Elements] using the given [Options].
@@ -38,12 +39,16 @@ func Fetch(ctx context.Context, opts *Options) (*Elements, error) {
 // Options for the decorator.
 type Options struct {
 	Context string // "privatperson" | "arbeidsgiver" | "samarbeidspartner"
+	Chatbot *bool
 }
 
 // Query is the decorator [Options] expressed as URL query parameters.
 func (o *Options) Query() url.Values {
 	q := url.Values{}
 	q.Set("context", o.Context)
+	if o.Chatbot != nil {
+		q.Set("chatbot", strconv.FormatBool(*o.Chatbot))
+	}
 	return q
 }
 
