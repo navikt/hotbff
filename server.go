@@ -1,7 +1,9 @@
 package hotbff
 
 import (
+	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"path"
@@ -33,7 +35,7 @@ type Options struct {
 
 // Start starts the HTTP server with the given [Options].
 func Start(opts *Options) {
-	slog.Info("hotbff: starting server", "address", addr, "basePath", opts.BasePath, "rootDir", opts.RootDir)
+	slog.Info("hotbff: starting server", "address", bindAddressToLog(addr), "basePath", opts.BasePath, "rootDir", opts.RootDir)
 	err := http.ListenAndServe(addr, Handler(opts))
 	if err != nil {
 		slog.Error("hotbff: server startup failed", "error", err)
@@ -79,4 +81,19 @@ func maybeStripPrefix(prefix string, h http.Handler) http.Handler {
 		return h
 	}
 	return http.StripPrefix(prefix, h)
+}
+
+func bindAddressToLog(bindAddr string) string {
+	host, port, err := net.SplitHostPort(bindAddr)
+	if err != nil {
+		// If we can't split, fallback to default
+		return "http://localhost" + bindAddr
+	}
+
+	// Handle empty or wildcard host
+	if host == "" || host == "0.0.0.0" || host == "127.0.0.1" {
+		host = "localhost"
+	}
+
+	return fmt.Sprintf("http://%s:%s", host, port)
 }
