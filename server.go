@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/navikt/hotbff/decorator"
 	"github.com/navikt/hotbff/proxy"
@@ -35,7 +36,7 @@ type Options struct {
 
 // Start starts the HTTP server with the given [Options].
 func Start(opts *Options) {
-	slog.Info("hotbff: starting server", "address", bindAddressToLog(addr), "basePath", opts.BasePath, "rootDir", opts.RootDir)
+	slog.Info("hotbff: starting server", "address", strings.Join([]string{bindAddressToLog(addr), opts.BasePath}, ""), "basePath", opts.BasePath, "rootDir", opts.RootDir)
 	err := http.ListenAndServe(addr, Handler(opts))
 	if err != nil {
 		slog.Error("hotbff: server startup failed", "error", err)
