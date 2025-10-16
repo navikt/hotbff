@@ -36,10 +36,20 @@ func Fetch(ctx context.Context, opts *Options) (*Elements, error) {
 	return &elems, nil
 }
 
+// AvailableLanguage represents a language option in the decorator.
+type AvailableLanguage struct {
+	Locale      string `json:"locale"`
+	HandleInApp bool   `json:"handleInApp"`
+}
+
 // Options for the decorator.
 type Options struct {
-	Context string // "privatperson" | "arbeidsgiver" | "samarbeidspartner"
-	Chatbot *bool
+	Context            string // "privatperson" | "arbeidsgiver" | "samarbeidspartner"
+	Chatbot            *bool
+	Env                string // "prod" | "dev"
+	Language           string // Locale, e.g. "nb"
+	AvailableLanguages []AvailableLanguage
+	LogoutWarning      *bool // Show logout warning if true
 }
 
 // Query is the decorator [Options] expressed as URL query parameters.
@@ -48,6 +58,20 @@ func (o *Options) Query() url.Values {
 	q.Set("context", o.Context)
 	if o.Chatbot != nil {
 		q.Set("chatbot", strconv.FormatBool(*o.Chatbot))
+	}
+	if o.Env != "" {
+		q.Set("env", o.Env)
+	}
+	if o.Language != "" {
+		q.Set("language", o.Language)
+	}
+	if len(o.AvailableLanguages) > 0 {
+		if b, err := json.Marshal(o.AvailableLanguages); err == nil {
+			q.Set("availableLanguages", string(b))
+		}
+	}
+	if o.LogoutWarning != nil {
+		q.Set("logoutWarning", strconv.FormatBool(*o.LogoutWarning))
 	}
 	return q
 }
