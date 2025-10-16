@@ -66,9 +66,8 @@ func (o *Options) Query() url.Values {
 		q.Set("language", o.Language)
 	}
 	if len(o.AvailableLanguages) > 0 {
-		if b, err := json.Marshal(o.AvailableLanguages); err == nil {
-			q.Set("availableLanguages", string(b))
-		}
+		b, _ := json.Marshal(o.AvailableLanguages)
+		q.Set("availableLanguages", string(b))
 	}
 	if o.LogoutWarning != nil {
 		q.Set("logoutWarning", strconv.FormatBool(*o.LogoutWarning))
