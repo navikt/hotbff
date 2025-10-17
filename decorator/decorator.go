@@ -46,7 +46,6 @@ type AvailableLanguage struct {
 type Options struct {
 	Context            string // "privatperson" | "arbeidsgiver" | "samarbeidspartner"
 	Chatbot            *bool
-	Env                string // "prod" | "dev"
 	Language           string // Locale, e.g. "nb"
 	AvailableLanguages []AvailableLanguage
 	LogoutWarning      *bool // Show logout warning if true
@@ -58,9 +57,6 @@ func (o *Options) Query() url.Values {
 	q.Set("context", o.Context)
 	if o.Chatbot != nil {
 		q.Set("chatbot", strconv.FormatBool(*o.Chatbot))
-	}
-	if o.Env != "" {
-		q.Set("env", o.Env)
 	}
 	if o.Language != "" {
 		q.Set("language", o.Language)

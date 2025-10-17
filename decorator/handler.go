@@ -20,6 +20,12 @@ func Handler(name string, opts *Options) http.Handler {
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
+
+		cookie, err := req.Cookie("decorator-language")
+		if err == nil && (cookie.Value == "nb" || cookie.Value == "nn") {
+			opts.Language = cookie.Value
+		}
+
 		elems, err := Fetch(ctx, opts)
 		if err != nil {
 			if errors.Is(err, context.Canceled) {
