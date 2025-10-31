@@ -64,6 +64,7 @@ func Handler(opts *Options) http.Handler {
 	// /base/path/ (public)
 	baseMux := http.NewServeMux()
 	baseMux.Handle("GET /settings.js", settingsHandler(basePath, opts.EnvKeys))
+	baseMux.Handle("GET /auth/status", opts.IDP.Status())
 
 	// /base/path/ (protected)
 	protectedMux := http.NewServeMux()
