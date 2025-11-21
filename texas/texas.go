@@ -19,6 +19,15 @@ const (
 	TokenX       IdentityProvider = "tokenx"
 )
 
+type WhitelistConfig struct {
+	// WhitelistPaths are exact paths that don't require authentication (e.g., "/", "/about")
+	WhitelistPaths []string
+	// WhitelistExtensions are file extensions that don't require authentication (e.g., ".js", ".png", ".css")
+	WhitelistExtensions []string
+	// WhitelistPrefixes are path prefixes that don't require authentication (e.g., "/assets/", "/public/")
+	WhitelistPrefixes []string
+}
+
 // GetToken retrieves a token from the identity provider for the given target audience.
 // It returns a [TokenSet] containing the new token.
 func GetToken(ctx context.Context, idp IdentityProvider, target string) (*TokenSet, error) {

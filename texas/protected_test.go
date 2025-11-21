@@ -40,7 +40,7 @@ func callProtectedHandler(t *testing.T, userToken string, active bool) *http.Res
 		req.Header.Set(HeaderAuthorization, "Bearer "+userToken)
 	}
 
-	h := Protected(TokenX, "/", http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+	h := Protected(TokenX, "/", getWhitelistConfig(), http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
 	h.ServeHTTP(w, req)
@@ -61,6 +61,13 @@ func texasIntrospectionServer(t *testing.T, active bool) *httptest.Server {
 	}))
 	tokenIntrospectionURL = s.URL
 	return s
+}
+
+func getWhitelistConfig() *WhitelistConfig {
+	return &WhitelistConfig{
+		WhitelistPaths:    []string{"/"},
+		WhitelistPrefixes: []string{"/assets/"},
+	}
 }
 
 func getLocation(t *testing.T, res *http.Response) string {
