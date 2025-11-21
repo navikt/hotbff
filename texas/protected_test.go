@@ -65,7 +65,7 @@ func texasIntrospectionServer(t *testing.T, active bool) *httptest.Server {
 
 func getWhitelistConfig() *WhitelistConfig {
 	return &WhitelistConfig{
-		WhitelistPaths:    []string{"/"},
+		WhitelistPaths:    []string{},
 		WhitelistPrefixes: []string{"/assets/"},
 	}
 }
