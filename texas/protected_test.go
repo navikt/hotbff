@@ -20,14 +20,14 @@ func TestProtectedInactiveToken(t *testing.T) {
 	res := callProtectedHandler(t, "userToken", false)
 	defer res.Body.Close()
 	assert.Equal(t, res.StatusCode, http.StatusTemporaryRedirect)
-	assert.Equal(t, getLocation(t, res), "/oauth2/login?redirect="+url.QueryEscape("/"))
+	assert.Equal(t, getLocation(t, res), "/oauth2/login?redirect=/"+url.QueryEscape("/"))
 }
 
 func TestProtectedMissingToken(t *testing.T) {
 	res := callProtectedHandler(t, "", true)
 	defer res.Body.Close()
 	assert.Equal(t, res.StatusCode, http.StatusTemporaryRedirect)
-	assert.Equal(t, getLocation(t, res), "/oauth2/login?redirect="+url.QueryEscape("/"))
+	assert.Equal(t, getLocation(t, res), "/oauth2/login?redirect=/"+url.QueryEscape("/"))
 }
 
 func callProtectedHandler(t *testing.T, userToken string, active bool) *http.Response {
