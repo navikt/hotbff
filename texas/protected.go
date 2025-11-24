@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"path"
 	"strings"
 )
@@ -79,10 +80,14 @@ func isWhitelisted(urlPath string, basepath string, config *WhitelistConfig) (bo
 
 func loginRedirect(w http.ResponseWriter, req *http.Request, basePath string) {
 	ctx := req.Context()
-	url := path.Join(basePath, "/oauth2/login")
-	if basePath != "/" {
-		url = url + "?redirect=" + basePath
+	loginURL := path.Join(basePath, "/oauth2/login")
+
+	returnToURL := req.URL.Path
+	if req.URL.RawQuery != "" {
+		returnToURL = returnToURL + "?" + req.URL.RawQuery
 	}
-	slog.DebugContext(ctx, "texas: login redirect", "url", url)
-	http.Redirect(w, req, url, http.StatusTemporaryRedirect)
+	loginURL = loginURL + "?redirect=" + url.QueryEscape(returnToURL)
+
+	slog.DebugContext(ctx, "texas: login redirect", "url", loginURL, "returnTo", returnToURL)
+	http.Redirect(w, req, loginURL, http.StatusTemporaryRedirect)
 }
