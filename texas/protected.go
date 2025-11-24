@@ -86,8 +86,12 @@ func loginRedirect(w http.ResponseWriter, req *http.Request, basePath string) {
 	if req.URL.RawQuery != "" {
 		returnToURL = returnToURL + "?" + req.URL.RawQuery
 	}
-	loginURL = loginURL + "?redirect=" + url.QueryEscape(returnToURL)
+	loginURL = loginURL + "?redirect=" + basePath + url.QueryEscape(returnToURL)
 
-	slog.DebugContext(ctx, "texas: login redirect", "url", loginURL, "returnTo", returnToURL)
+	slog.InfoContext(ctx, "texas: login redirect",
+		"loginURL", loginURL,
+		"returnToURL", returnToURL,
+		"req.URL.Path", req.URL.Path,
+		"basePath", basePath)
 	http.Redirect(w, req, loginURL, http.StatusTemporaryRedirect)
 }
