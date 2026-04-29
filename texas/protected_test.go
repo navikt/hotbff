@@ -11,6 +11,7 @@ import (
 
 func TestProtectedActiveToken(t *testing.T) {
 	res := callProtectedHandler(t, "userToken", true)
+	//goland:noinspection GoUnhandledErrorResult
 	defer res.Body.Close()
 	assert.Equal(t, res.StatusCode, http.StatusOK)
 	assert.Equal(t, getLocation(t, res), "")
@@ -18,6 +19,7 @@ func TestProtectedActiveToken(t *testing.T) {
 
 func TestProtectedInactiveToken(t *testing.T) {
 	res := callProtectedHandler(t, "userToken", false)
+	//goland:noinspection GoUnhandledErrorResult
 	defer res.Body.Close()
 	assert.Equal(t, res.StatusCode, http.StatusTemporaryRedirect)
 	assert.Equal(t, getLocation(t, res), "/oauth2/login?redirect="+url.QueryEscape("/"))
@@ -25,6 +27,7 @@ func TestProtectedInactiveToken(t *testing.T) {
 
 func TestProtectedMissingToken(t *testing.T) {
 	res := callProtectedHandler(t, "", true)
+	//goland:noinspection GoUnhandledErrorResult
 	defer res.Body.Close()
 	assert.Equal(t, res.StatusCode, http.StatusTemporaryRedirect)
 	assert.Equal(t, getLocation(t, res), "/oauth2/login?redirect="+url.QueryEscape("/"))
@@ -41,7 +44,7 @@ func callProtectedHandler(t *testing.T, userToken string, active bool) *http.Res
 		req.Header.Set(HeaderAuthorization, "Bearer "+userToken)
 	}
 
-	h := Protected(TokenX, "/", DefaultOptions(), http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+	h := Protected(TokenX, DefaultOptions(), "/", http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
 	h.ServeHTTP(w, req)

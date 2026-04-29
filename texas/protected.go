@@ -10,19 +10,19 @@ import (
 	"strings"
 )
 
-// Protected wraps a handler with token-based authentication using the provided [IdentityProvider].
-// If the identity provider is not set, the handler is returned as is.
+// Protected wraps a handler with token-based authentication using the provided [TokenIntrospector].
+// If the token introspector is not set, the handler is returned as is.
 // If the token is missing or invalid, the user is redirected to the login page.
-func Protected(idp TokenIntrospector, basePath string, opts *Options, next http.Handler) http.Handler {
+func Protected(idp TokenIntrospector, opts *Options, basePath string, next http.Handler) http.Handler {
 	if idp == nil {
-		slog.Warn("texas: identity provider not set, token validation disabled")
+		slog.Warn("texas: token introspector not set, token validation disabled")
 		return next
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 
-		if public, reason := opts.isPublic(req.URL.Path, basePath); public {
-			slog.DebugContext(ctx, "texas: public path, skipping authentication", "path", req.URL.Path, "reason", reason)
+		if public, reason := isPublic(req.URL.Path, basePath, opts); public {
+			slog.DebugContext(ctx, "texas: public path, token validation skipped", "path", req.URL.Path, "reason", reason)
 			next.ServeHTTP(w, req.WithContext(ctx))
 			return
 		}

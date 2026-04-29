@@ -82,7 +82,7 @@ func Handler(opts *Options, rootMux *http.ServeMux) http.Handler {
 	// /base/path/proxy/prefix/ (protected)
 	proxy.Configure(opts.Proxy, protectedMux)
 
-	baseMux.Handle("/", texas.Protected(opts.IDP, basePath, opts.TexasOpts, protectedMux))
+	baseMux.Handle("/", texas.Protected(opts.IDP, opts.TexasOpts, basePath, protectedMux))
 	rootMux.Handle(basePath, maybeStripPrefix(path.Join(basePath), baseMux))
 	return rootMux
 }
