@@ -48,25 +48,25 @@ type Options struct {
 	Chatbot            *bool
 	Language           string // Locale, e.g. "nb"
 	AvailableLanguages []AvailableLanguage
-	LogoutWarning      *bool // Show logout warning if true
+	LogoutWarning      *bool // Show a logout warning if true
 }
 
 // Query is the decorator [Options] expressed as URL query parameters.
-func (o *Options) Query() url.Values {
+func (opts *Options) Query() url.Values {
 	q := url.Values{}
-	q.Set("context", o.Context)
-	if o.Chatbot != nil {
-		q.Set("chatbot", strconv.FormatBool(*o.Chatbot))
+	q.Set("context", opts.Context)
+	if opts.Chatbot != nil {
+		q.Set("chatbot", strconv.FormatBool(*opts.Chatbot))
 	}
-	if o.Language != "" {
-		q.Set("language", o.Language)
+	if opts.Language != "" {
+		q.Set("language", opts.Language)
 	}
-	if len(o.AvailableLanguages) > 0 {
-		b, _ := json.Marshal(o.AvailableLanguages)
+	if len(opts.AvailableLanguages) > 0 {
+		b, _ := json.Marshal(opts.AvailableLanguages)
 		q.Set("availableLanguages", string(b))
 	}
-	if o.LogoutWarning != nil {
-		q.Set("logoutWarning", strconv.FormatBool(*o.LogoutWarning))
+	if opts.LogoutWarning != nil {
+		q.Set("logoutWarning", strconv.FormatBool(*opts.LogoutWarning))
 	}
 	return q
 }

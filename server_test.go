@@ -15,6 +15,7 @@ func TestHandlerIsAlive(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/isalive", nil)
 
 	res := callHandler(t, req)
+	//goland:noinspection GoUnhandledErrorResult
 	defer res.Body.Close()
 	data, err := io.ReadAll(res.Body)
 	assert.Nil(t, err)
@@ -26,6 +27,7 @@ func TestHandlerIsReady(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/isready", nil)
 
 	res := callHandler(t, req)
+	//goland:noinspection GoUnhandledErrorResult
 	defer res.Body.Close()
 	data, err := io.ReadAll(res.Body)
 	assert.Nil(t, err)
@@ -44,7 +46,7 @@ func callHandler(t *testing.T, req *http.Request) *http.Response {
 	h := Handler(&Options{
 		BasePath: "/test/",
 		RootDir:  rootDir,
-	})
+	}, nil)
 
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, req)

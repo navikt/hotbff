@@ -16,7 +16,7 @@ func (idp IdentityProvider) Status() http.Handler {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
-		ti, err := IntrospectToken(ctx, idp, token)
+		ti, err := idp.IntrospectToken(ctx, token)
 		if err != nil {
 			if errors.Is(err, context.Canceled) {
 				w.WriteHeader(http.StatusRequestTimeout)

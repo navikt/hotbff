@@ -19,18 +19,25 @@ const (
 	TokenX       IdentityProvider = "tokenx"
 )
 
-type WhitelistConfig struct {
-	// WhitelistPaths are exact paths that don't require authentication (e.g., "/", "/about")
-	WhitelistPaths []string
-	// WhitelistExtensions are file extensions that don't require authentication (e.g., ".js", ".png", ".css")
-	WhitelistExtensions []string
-	// WhitelistPrefixes are path prefixes that don't require authentication (e.g., "/assets/", "/public/")
-	WhitelistPrefixes []string
+type TokenGetter interface {
+	// GetToken retrieves a token from the identity provider for the given target audience.
+	// It returns a [TokenSet] containing the new token.
+	GetToken(ctx context.Context, target string) (*TokenSet, error)
 }
 
-// GetToken retrieves a token from the identity provider for the given target audience.
-// It returns a [TokenSet] containing the new token.
-func GetToken(ctx context.Context, idp IdentityProvider, target string) (*TokenSet, error) {
+type TokenExchanger interface {
+	// ExchangeToken exchanges the user's token for a new token from the identity provider for the given target audience.
+	// It returns a [TokenSet] containing the new token.
+	ExchangeToken(ctx context.Context, target string, userToken string) (*TokenSet, error)
+}
+
+type TokenIntrospector interface {
+	// IntrospectToken validates the given token from the identity provider.
+	// It returns a [TokenIntrospection] indicating whether the token is active.
+	IntrospectToken(ctx context.Context, token string) (*TokenIntrospection, error)
+}
+
+func (idp IdentityProvider) GetToken(ctx context.Context, target string) (*TokenSet, error) {
 	fv := newFormValues(idp)
 	fv.Set(targetFormKey, target)
 	var ts TokenSet
@@ -40,9 +47,7 @@ func GetToken(ctx context.Context, idp IdentityProvider, target string) (*TokenS
 	return &ts, nil
 }
 
-// ExchangeToken exchanges the user's token for a new token from the identity provider for the given target audience.
-// It returns a [TokenSet] containing the new token.
-func ExchangeToken(ctx context.Context, idp IdentityProvider, target string, userToken string) (*TokenSet, error) {
+func (idp IdentityProvider) ExchangeToken(ctx context.Context, target string, userToken string) (*TokenSet, error) {
 	fv := newFormValues(idp)
 	fv.Set(targetFormKey, target)
 	fv.Set(userTokenFormKey, userToken)
@@ -53,9 +58,7 @@ func ExchangeToken(ctx context.Context, idp IdentityProvider, target string, use
 	return &ts, nil
 }
 
-// IntrospectToken validates the given token from the identity provider.
-// It returns a [TokenIntrospection] indicating whether the token is active.
-func IntrospectToken(ctx context.Context, idp IdentityProvider, token string) (*TokenIntrospection, error) {
+func (idp IdentityProvider) IntrospectToken(ctx context.Context, token string) (*TokenIntrospection, error) {
 	fv := newFormValues(idp)
 	fv.Set(tokenFormKey, token)
 	var ti TokenIntrospection

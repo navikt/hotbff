@@ -17,6 +17,7 @@ func TestSettingsHandler(t *testing.T) {
 	h.ServeHTTP(w, req)
 
 	res := w.Result()
+	//goland:noinspection GoUnhandledErrorResult
 	defer res.Body.Close()
 	assert.Equal(t, res.StatusCode, http.StatusOK)
 

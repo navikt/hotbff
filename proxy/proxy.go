@@ -14,30 +14,30 @@ import (
 
 // Options for the proxy.
 type Options struct {
-	Target      string                 `json:"target"`      // the URL to proxy to (backend)
-	StripPrefix bool                   `json:"stripPrefix"` // whether to strip the prefix from the request URL
-	IDP         texas.IdentityProvider `json:"idp"`         // identity provider for token exchange (if empty, no token exchange is performed)
-	IDPTarget   string                 `json:"idpTarget"`   // the target audience used in the token exchange (required if IDP is set)
+	Target      string               `json:"target"`      // the URL to proxy to (backend)
+	StripPrefix bool                 `json:"stripPrefix"` // whether to strip the prefix from the request URL
+	IDP         texas.TokenExchanger `json:"idp"`         // identity provider for token exchange (if nil, no token exchange is performed)
+	IDPTarget   string               `json:"idpTarget"`   // the target audience used in the token exchange (required if IDP is set)
 }
 
 // Handler returns a handler that proxies requests to the target URL.
-func (t *Options) Handler() http.Handler {
-	target, err := url.Parse(t.Target)
+func (opts *Options) Handler() http.Handler {
+	target, err := url.Parse(opts.Target)
 	if err != nil {
-		slog.Error("proxy: invalid target", "target", t.Target, "error", err)
+		slog.Error("proxy: invalid target", "target", opts.Target, "error", err)
 		os.Exit(1)
 	}
-	if t.IDP == "" {
+	if opts.IDP == nil {
 		return &httputil.ReverseProxy{
 			Rewrite: func(r *httputil.ProxyRequest) {
 				r.SetURL(target)
 			},
 		}
 	}
-	return newTokenExchangeReverseProxy(target, t.IDP, t.IDPTarget)
+	return newTokenExchangeReverseProxy(target, opts.IDP, opts.IDPTarget)
 }
 
-func newTokenExchangeReverseProxy(target *url.URL, idp texas.IdentityProvider, idpTarget string) *httputil.ReverseProxy {
+func newTokenExchangeReverseProxy(target *url.URL, idp texas.TokenExchanger, idpTarget string) *httputil.ReverseProxy {
 	return &httputil.ReverseProxy{
 		Rewrite: func(r *httputil.ProxyRequest) {
 			r.SetURL(target)
@@ -47,7 +47,7 @@ func newTokenExchangeReverseProxy(target *url.URL, idp texas.IdentityProvider, i
 				slog.WarnContext(ctx, "proxy: user unauthenticated", "idp", idp, "idpTarget", idpTarget)
 				return
 			}
-			ts, err := texas.ExchangeToken(ctx, idp, idpTarget, user.Token)
+			ts, err := idp.ExchangeToken(ctx, idpTarget, user.Token)
 			if err != nil {
 				if !errors.Is(err, context.Canceled) {
 					slog.ErrorContext(ctx, "proxy: token exchange error", "idp", idp, "idpTarget", idpTarget, "error", err)

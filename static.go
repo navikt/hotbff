@@ -18,7 +18,7 @@ func staticHandler(rootDir string, opts *decorator.Options) http.Handler {
 		ctx := req.Context()
 		slog.DebugContext(ctx, "hotbff: serving static file", "path", req.URL.Path)
 		switch req.URL.Path {
-		// index.html might need decoration, http.FileServer will not do that
+		// index.html might need decoration, http.FileServer does not perform decoration
 		case "", "/", "index.html", "/index.html":
 			index.ServeHTTP(w, req)
 		default:

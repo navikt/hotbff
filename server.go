@@ -15,9 +15,7 @@ import (
 )
 
 var (
-	addr              = os.Getenv("BIND_ADDRESS")
-	defaultExtensions = []string{".js", ".js.map", ".json", ".css", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".webp", ".woff2", ".woff", ".ttf", ".eot", ".otf"}
-	defaultPrefixes   = []string{"/assets/"}
+	addr = os.Getenv("BIND_ADDRESS")
 )
 
 func init() {
@@ -28,19 +26,19 @@ func init() {
 
 // Options for the server.
 type Options struct {
-	BasePath           string                 // the base path to serve the application on (defaults to "/")
-	RootDir            string                 // the directory to serve static files from (defaults to "dist")
-	DecoratorOpts      *decorator.Options     // options for the HTML decorator
-	Proxy              proxy.Map              // map of proxy options keyed by URL prefix
-	IDP                texas.IdentityProvider // identity provider to use for token validation (if empty, no validation is performed)
-	EnvKeys            []string               // list of environment variable keys to expose to the frontend (via "/settings.js")
-	ProtectedWhitelist *texas.WhitelistConfig // configuration for whitelisting paths from protection
+	BasePath      string                 // the base path to serve the application on (defaults to "/")
+	RootDir       string                 // the directory to serve static files from (defaults to "dist")
+	DecoratorOpts *decorator.Options     // options for the HTML decorator
+	Proxy         proxy.Map              // map of proxy options keyed by URL prefix
+	IDP           texas.IdentityProvider // identity provider to use for token validation (if empty, no validation is performed)
+	TexasOpts     *texas.Options         // options for Texas
+	EnvKeys       []string               // list of environment variable keys to expose to the frontend (via "/settings.js")
 }
 
 // Start starts the HTTP server with the given [Options].
 func Start(opts *Options) {
 	slog.Info("hotbff: starting server", "address", strings.Join([]string{bindAddressToLog(addr), opts.BasePath}, ""), "basePath", opts.BasePath, "rootDir", opts.RootDir)
-	err := http.ListenAndServe(addr, Handler(opts))
+	err := http.ListenAndServe(addr, Handler(opts, nil))
 	if err != nil {
 		slog.Error("hotbff: server startup failed", "error", err)
 		os.Exit(1)
@@ -48,7 +46,7 @@ func Start(opts *Options) {
 }
 
 // Handler returns a handler that serves the application with the given [Options].
-func Handler(opts *Options) http.Handler {
+func Handler(opts *Options, rootMux *http.ServeMux) http.Handler {
 	basePath := opts.BasePath
 	rootDir := opts.RootDir
 
@@ -59,19 +57,16 @@ func Handler(opts *Options) http.Handler {
 		rootDir = "dist"
 	}
 
-	if opts.ProtectedWhitelist == nil {
-		opts.ProtectedWhitelist = &texas.WhitelistConfig{
-			WhitelistExtensions: defaultExtensions,
-			WhitelistPrefixes:   defaultPrefixes,
-		}
+	if opts.TexasOpts == nil {
+		opts.TexasOpts = texas.DefaultOptions()
 	} else {
-		// Ensure default extensions are included when a custom whitelist config is provided
-		opts.ProtectedWhitelist.WhitelistExtensions = append(opts.ProtectedWhitelist.WhitelistExtensions, defaultExtensions...)
-		opts.ProtectedWhitelist.WhitelistPrefixes = append(opts.ProtectedWhitelist.WhitelistPrefixes, defaultPrefixes...)
+		opts.TexasOpts.AddDefaults()
 	}
 
 	// / (public)
-	rootMux := http.NewServeMux()
+	if rootMux == nil {
+		rootMux = http.NewServeMux()
+	}
 	rootMux.Handle("GET /isalive", healthHandler("ALIVE"))
 	rootMux.Handle("GET /isready", healthHandler("READY"))
 
@@ -87,7 +82,7 @@ func Handler(opts *Options) http.Handler {
 	// /base/path/proxy/prefix/ (protected)
 	proxy.Configure(opts.Proxy, protectedMux)
 
-	baseMux.Handle("/", texas.Protected(opts.IDP, basePath, opts.ProtectedWhitelist, protectedMux))
+	baseMux.Handle("/", texas.Protected(opts.IDP, basePath, opts.TexasOpts, protectedMux))
 	rootMux.Handle(basePath, maybeStripPrefix(path.Join(basePath), baseMux))
 	return rootMux
 }
