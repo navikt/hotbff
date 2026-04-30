@@ -79,6 +79,12 @@ type Elements struct {
 	Scripts    template.HTML `json:"scripts"`
 }
 
+const (
+	ContextPrivatperson      = "privatperson"
+	ContextArbeidsgiver      = "arbeidsgiver"
+	ContextSamarbeidspartner = "samarbeidspartner"
+)
+
 var (
 	cluster         = os.Getenv("NAIS_CLUSTER_NAME")
 	decoratorURL    = "http://nav-dekoratoren.personbruker/dekoratoren/ssr"
