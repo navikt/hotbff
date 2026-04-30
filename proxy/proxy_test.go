@@ -1,22 +1,22 @@
 package proxy
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/navikt/hotbff/internal/assert"
+	"github.com/navikt/hotbff/internal/test"
 	"github.com/navikt/hotbff/texas"
 )
 
 func TestHandler(t *testing.T) {
+	target := "api://test.test.test/.default"
 	user := &texas.User{
 		Authenticated: true,
 		Token:         "userToken",
 	}
 	accessToken := "accessToken"
-	idpTarget := "api://test.test.test/.default"
 
 	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		assert.Equal(t, req.Header.Get(texas.HeaderAuthorization), "Bearer "+accessToken)
@@ -27,14 +27,8 @@ func TestHandler(t *testing.T) {
 	p := &Options{
 		Target:      backend.URL,
 		StripPrefix: false,
-		IDP: exchangeTokenFunc(func(_ context.Context, target string, userToken string) (*texas.TokenSet, error) {
-			assert.Equal(t, target, idpTarget)
-			assert.Equal(t, userToken, user.Token)
-			return &texas.TokenSet{
-				AccessToken: accessToken,
-			}, nil
-		}),
-		IDPTarget: idpTarget,
+		IDP:         test.NewTokenExchanger(t, target, user.Token, accessToken),
+		IDPTarget:   target,
 	}
 
 	w := httptest.NewRecorder()
@@ -49,10 +43,4 @@ func TestHandler(t *testing.T) {
 	//goland:noinspection GoUnhandledErrorResult
 	defer res.Body.Close()
 	assert.Equal(t, res.StatusCode, http.StatusOK)
-}
-
-type exchangeTokenFunc func(ctx context.Context, target string, userToken string) (*texas.TokenSet, error)
-
-func (f exchangeTokenFunc) ExchangeToken(ctx context.Context, target string, userToken string) (*texas.TokenSet, error) {
-	return f(ctx, target, userToken)
 }
