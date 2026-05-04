@@ -24,10 +24,10 @@ func TestHandler(t *testing.T) {
 	}))
 	defer backend.Close()
 
-	p := &Options{
+	opts := &Options{
 		Target:      backend.URL,
 		StripPrefix: false,
-		IDP:         test.NewTokenExchanger(t, target, user.Token, accessToken),
+		IDP:         test.NewIdentityProvider(accessToken, true, nil),
 		IDPTarget:   target,
 	}
 
@@ -36,7 +36,8 @@ func TestHandler(t *testing.T) {
 	req = req.WithContext(texas.NewContext(req.Context(), user))
 	req.Header.Set(texas.HeaderAuthorization, "Bearer "+user.Token)
 
-	h := p.Handler()
+	h, err := newReverseProxy(opts)
+	assert.Nil(t, err)
 	h.ServeHTTP(w, req)
 
 	res := w.Result()

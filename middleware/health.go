@@ -1,11 +1,11 @@
-package hotbff
+package middleware
 
 import (
 	"fmt"
 	"net/http"
 )
 
-func healthHandler(status string) http.Handler {
+func Health(status string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		_, err := fmt.Fprint(w, status)
 		if err != nil {

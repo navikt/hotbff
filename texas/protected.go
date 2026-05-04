@@ -14,7 +14,7 @@ import (
 // If the token introspector is not set, the handler is returned as is.
 // If the token is missing or invalid, the user is redirected to the login page.
 func Protected(idp TokenIntrospector, opts *Options, basePath string, next http.Handler) http.Handler {
-	if idp == nil {
+	if idp == nil || !idp.Set() {
 		slog.Warn("texas: token introspector not set, token validation disabled")
 		return next
 	}

@@ -53,6 +53,14 @@ func (opts *Options) AddDefaults() {
 	)
 }
 
+func (opts *Options) Clone() *Options {
+	return &Options{
+		PublicExtensions: opts.PublicExtensions.Clone(),
+		PublicPaths:      opts.PublicPaths.Clone(),
+		PublicPrefixes:   opts.PublicPrefixes.Clone(),
+	}
+}
+
 func NewOptions() *Options {
 	return &Options{
 		PublicExtensions: set.New[string](),

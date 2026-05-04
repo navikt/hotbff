@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/navikt/hotbff/decorator"
+	"github.com/navikt/hotbff/middleware"
 	"github.com/navikt/hotbff/proxy"
 	"github.com/navikt/hotbff/texas"
 )
@@ -26,65 +27,74 @@ func init() {
 
 // Options for the server.
 type Options struct {
-	BasePath      string                 // the base path to serve the application on (defaults to "/")
-	RootDir       string                 // the directory to serve static files from (defaults to "dist")
-	DecoratorOpts *decorator.Options     // options for the HTML decorator
-	Proxy         proxy.Map              // map of proxy options keyed by URL prefix
-	IDP           texas.IdentityProvider // identity provider to use for token validation (if empty, no validation is performed)
-	TexasOpts     *texas.Options         // options for Texas
-	EnvKeys       []string               // list of environment variable keys to expose to the frontend (via "/settings.js")
+	BasePath      string                  // the base path to serve the application on (defaults to "/")
+	RootDir       string                  // the directory to serve static files from (defaults to "dist")
+	DecoratorOpts *decorator.Options      // options for the HTML decorator
+	Proxy         proxy.Map               // map of proxy options keyed by URL prefix
+	IDP           texas.TokenIntrospector // identity provider to use for token introspection (if nil, no validation is performed)
+	TexasOpts     *texas.Options          // options for Texas
+	EnvKeys       []string                // list of environment variable keys to expose to the frontend (via "/settings.js")
 }
 
 // Start starts the HTTP server with the given [Options].
-func Start(opts *Options) {
+func Start(mux *http.ServeMux, opts *Options) {
+	if mux == nil {
+		mux = http.DefaultServeMux
+	}
 	slog.Info("hotbff: starting server", "address", strings.Join([]string{bindAddressToLog(addr), opts.BasePath}, ""), "basePath", opts.BasePath, "rootDir", opts.RootDir)
-	err := http.ListenAndServe(addr, Handler(opts, nil))
+	Configure(mux, opts)
+	err := http.ListenAndServe(addr, mux)
 	if err != nil {
 		slog.Error("hotbff: server startup failed", "error", err)
 		os.Exit(1)
 	}
 }
 
-// Handler returns a handler that serves the application with the given [Options].
-func Handler(opts *Options, rootMux *http.ServeMux) http.Handler {
-	basePath := opts.BasePath
-	rootDir := opts.RootDir
+// Configure configures the given [http.ServeMux] with the [Options] provided.
+func Configure(mux *http.ServeMux, opts *Options) {
+	if mux == nil {
+		mux = http.DefaultServeMux
+	}
 
+	basePath := opts.BasePath
 	if basePath == "" {
 		basePath = "/"
 	}
+	rootDir := opts.RootDir
 	if rootDir == "" {
 		rootDir = "dist"
 	}
 
-	if opts.TexasOpts == nil {
-		opts.TexasOpts = texas.DefaultOptions()
+	texasOpts := opts.TexasOpts
+	if texasOpts == nil {
+		texasOpts = texas.DefaultOptions()
 	} else {
-		opts.TexasOpts.AddDefaults()
+		texasOpts = texasOpts.Clone()
+		texasOpts.AddDefaults()
 	}
 
 	// / (public)
-	if rootMux == nil {
-		rootMux = http.NewServeMux()
-	}
-	rootMux.Handle("GET /isalive", healthHandler("ALIVE"))
-	rootMux.Handle("GET /isready", healthHandler("READY"))
+	mux.Handle("GET /isalive", middleware.Health("ALIVE"))
+	mux.Handle("GET /isready", middleware.Health("READY"))
 
 	// /base/path/ (public)
 	baseMux := http.NewServeMux()
 	baseMux.Handle("GET /settings.js", settingsHandler(basePath, opts.EnvKeys))
-	baseMux.Handle("GET /auth/status", opts.IDP.Status())
+	// baseMux.Handle("GET /auth/status", opts.IDP.Status())
 
 	// /base/path/ (protected)
 	protectedMux := http.NewServeMux()
 	protectedMux.Handle("/", staticHandler(rootDir, opts.DecoratorOpts))
 
 	// /base/path/proxy/prefix/ (protected)
-	proxy.Configure(opts.Proxy, protectedMux)
+	err := proxy.Configure(protectedMux, opts.Proxy)
+	if err != nil {
+		slog.Error("hotbff: failed to configure proxy", "error", err)
+		os.Exit(1)
+	}
 
 	baseMux.Handle("/", texas.Protected(opts.IDP, opts.TexasOpts, basePath, protectedMux))
-	rootMux.Handle(basePath, maybeStripPrefix(path.Join(basePath), baseMux))
-	return rootMux
+	mux.Handle(basePath, maybeStripPrefix(path.Join(basePath), baseMux))
 }
 
 func maybeStripPrefix(prefix string, h http.Handler) http.Handler {

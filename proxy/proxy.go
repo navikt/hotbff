@@ -3,11 +3,11 @@ package proxy
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"os"
 
 	"github.com/navikt/hotbff/texas"
 )
@@ -16,28 +16,64 @@ import (
 type Options struct {
 	Target      string               `json:"target"`      // the URL to proxy to (backend)
 	StripPrefix bool                 `json:"stripPrefix"` // whether to strip the prefix from the request URL
-	IDP         texas.TokenExchanger `json:"idp"`         // identity provider for token exchange (if nil, no token exchange is performed)
+	IDP         texas.TokenExchanger `json:"idp"`         // identity provider for token exchange (if unset, no token exchange is performed)
 	IDPTarget   string               `json:"idpTarget"`   // the target audience used in the token exchange (required if IDP is set)
 }
 
-// Handler returns a handler that proxies requests to the target URL.
-func (opts *Options) Handler() http.Handler {
-	target, err := url.Parse(opts.Target)
-	if err != nil {
-		slog.Error("proxy: invalid target", "target", opts.Target, "error", err)
-		os.Exit(1)
+// Map is a map of proxy [Options] keyed by URL prefix.
+type Map map[string]*Options
+
+// Configure adds proxy handlers to the given [http.ServeMux] based on the provided [Map].
+func Configure(mux *http.ServeMux, proxy Map) error {
+	if mux == nil {
+		mux = http.DefaultServeMux
 	}
-	if opts.IDP == nil {
-		return &httputil.ReverseProxy{
-			Rewrite: func(r *httputil.ProxyRequest) {
-				r.SetURL(target)
-			},
+	if proxy == nil {
+		slog.Info("proxy: no proxy")
+		return nil
+	}
+	for prefix, opts := range proxy {
+		if opts == nil {
+			slog.Warn("proxy: skipping proxy", "prefix", prefix)
+			continue
+		}
+		slog.Info("proxy: adding proxy", "prefix", prefix, "target", opts.Target)
+		h, err := newReverseProxy(opts)
+		if err != nil {
+			return err
+		}
+		if opts.StripPrefix {
+			mux.Handle(prefix, http.StripPrefix(prefix, h))
+		} else {
+			mux.Handle(prefix, h)
 		}
 	}
-	return newTokenExchangeReverseProxy(target, opts.IDP, opts.IDPTarget)
+	return nil
 }
 
-func newTokenExchangeReverseProxy(target *url.URL, idp texas.TokenExchanger, idpTarget string) *httputil.ReverseProxy {
+func newReverseProxy(opts *Options) (h http.Handler, err error) {
+	var t *url.URL
+	t, err = url.Parse(opts.Target)
+	if err != nil {
+		return nil, fmt.Errorf("proxy: invalid target: %w", err)
+	}
+	if opts.IDP == nil || !opts.IDP.Set() {
+		h, err = publicBackend(t), nil
+	} else {
+		h, err = protectedBackend(t, opts.IDP, opts.IDPTarget), nil
+	}
+	return
+}
+
+func publicBackend(target *url.URL) *httputil.ReverseProxy {
+	return &httputil.ReverseProxy{
+		Rewrite: func(r *httputil.ProxyRequest) {
+			r.SetURL(target)
+		},
+	}
+}
+
+func protectedBackend(target *url.URL, idp texas.TokenExchanger, idpTarget string) *httputil.ReverseProxy {
 	return &httputil.ReverseProxy{
 		Rewrite: func(r *httputil.ProxyRequest) {
 			r.SetURL(target)
@@ -56,25 +92,5 @@ func newTokenExchangeReverseProxy(target *url.URL, idp texas.TokenExchanger, idp
 			}
 			r.Out.Header.Set(texas.HeaderAuthorization, "Bearer "+ts.AccessToken)
 		},
-	}
-}
-
-// Map is a map of proxy [Options] keyed by URL prefix.
-type Map map[string]*Options
-
-// Configure adds proxy handlers to the given [http.ServeMux] based on the provided [Map].
-func Configure(proxy Map, mux *http.ServeMux) {
-	if proxy == nil {
-		slog.Info("proxy: no proxy")
-		return
-	}
-	for prefix, opts := range proxy {
-		slog.Info("proxy: adding proxy", "prefix", prefix, "target", opts.Target)
-		proxyHandler := opts.Handler()
-		if opts.StripPrefix {
-			mux.Handle(prefix, http.StripPrefix(prefix, proxyHandler))
-		} else {
-			mux.Handle(prefix, proxyHandler)
-		}
 	}
 }

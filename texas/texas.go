@@ -4,38 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
 )
-
-type IdentityProvider string
-
-const (
-	EntraID      IdentityProvider = "azuread"
-	IDPorten     IdentityProvider = "idporten"
-	Maskinporten IdentityProvider = "maskinporten"
-	TokenX       IdentityProvider = "tokenx"
-)
-
-type TokenGetter interface {
-	// GetToken retrieves a token from the identity provider for the given target audience.
-	// It returns a [TokenSet] containing the new token.
-	GetToken(ctx context.Context, target string) (*TokenSet, error)
-}
-
-type TokenExchanger interface {
-	// ExchangeToken exchanges the user's token for a new token from the identity provider for the given target audience.
-	// It returns a [TokenSet] containing the new token.
-	ExchangeToken(ctx context.Context, target string, userToken string) (*TokenSet, error)
-}
-
-type TokenIntrospector interface {
-	// IntrospectToken validates the given token from the identity provider.
-	// It returns a [TokenIntrospection] indicating whether the token is active.
-	IntrospectToken(ctx context.Context, token string) (*TokenIntrospection, error)
-}
 
 func (idp IdentityProvider) GetToken(ctx context.Context, target string) (*TokenSet, error) {
 	fv := newFormValues(idp)
@@ -68,14 +42,16 @@ func (idp IdentityProvider) IntrospectToken(ctx context.Context, token string) (
 	return &ti, nil
 }
 
-type TokenSet struct {
-	AccessToken string `json:"access_token"`
-	ExpiresIn   int    `json:"expires_in"`
-	TokenType   string `json:"token_type"`
+func (idp IdentityProvider) Set() bool {
+	return idp == EntraID || idp == IDPorten || idp == Maskinporten || idp == TokenX
 }
 
-type TokenIntrospection struct {
-	Active bool `json:"active"`
+func (idp IdentityProvider) LogValue() slog.Value {
+	return slog.StringValue(string(idp))
+}
+
+func (idp IdentityProvider) String() string {
+	return string(idp)
 }
 
 const (
@@ -102,6 +78,7 @@ func post(ctx context.Context, url string, fv url.Values, v any) error {
 	if err != nil {
 		return err
 	}
+	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {

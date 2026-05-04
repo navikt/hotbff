@@ -43,10 +43,11 @@ func callHandler(t *testing.T, req *http.Request) *http.Response {
 	err := os.WriteFile(indexPath, []byte("<!DOCTYPE html><html><body>test</body></html>"), 0644)
 	assert.Nil(t, err)
 
-	h := Handler(&Options{
+	h := http.NewServeMux()
+	Configure(h, &Options{
 		BasePath: "/test/",
 		RootDir:  rootDir,
-	}, nil)
+	})
 
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, req)
