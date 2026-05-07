@@ -3,36 +3,12 @@ package texas
 import (
 	"context"
 	"errors"
-	"fmt"
-	"log/slog"
 	"net/http"
 )
 
-var ErrUnauthorized = errors.New("unauthorized")
-
-func authorizeRequest(req *http.Request, idp TokenIntrospector) (*User, error) {
-	ctx := req.Context()
-	token, ok := TokenFromRequest(req)
-	if !ok {
-		return nil, fmt.Errorf("token missing: %w", ErrUnauthorized)
-	}
-	ti, err := idp.IntrospectToken(ctx, token)
-	if err != nil {
-		switch {
-		case errors.Is(err, context.Canceled):
-			return nil, fmt.Errorf("token introspection canceled: %w", err)
-		case errors.Is(err, context.DeadlineExceeded):
-			return nil, fmt.Errorf("token introspection timed out: %w", err)
-		default:
-			return nil, fmt.Errorf("token introspection failed: %w", err)
-		}
-	}
-	if !ti.Active {
-		return nil, fmt.Errorf("token inactive: %w", ErrUnauthorized)
-	}
-	return &User{Authenticated: true, Token: token}, nil
-}
-
+// Authenticate is a middleware that validates bearer tokens by introspecting them with the provided TokenIntrospector.
+// If a valid bearer token is present and token introspection succeeds with an active token, the [User] is added to the context
+// with Authenticated set to true. Otherwise, a non-authenticated User is added to the context.
 func Authenticate(idp TokenIntrospector, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
@@ -42,17 +18,17 @@ func Authenticate(idp TokenIntrospector, next http.Handler) http.Handler {
 			if err != nil {
 				switch {
 				case errors.Is(err, context.Canceled):
-					slog.DebugContext(ctx, "token introspection canceled")
+					log.DebugContext(ctx, "token introspection canceled", "error", err)
 				case errors.Is(err, context.DeadlineExceeded):
-					slog.WarnContext(ctx, "token introspection timed out", "error", err)
+					log.WarnContext(ctx, "token introspection timed out", "error", err)
 				default:
-					slog.ErrorContext(ctx, "token introspection failed", "error", err)
+					log.ErrorContext(ctx, "token introspection failed", "error", err)
 				}
 			} else if ti.Active {
 				user = &User{Authenticated: true, Token: token}
 			}
 		} else {
-			slog.DebugContext(ctx, "token missing")
+			log.DebugContext(ctx, "token missing")
 		}
 		ctx = NewContext(ctx, user)
 		next.ServeHTTP(w, req.WithContext(ctx))

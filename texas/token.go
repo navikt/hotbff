@@ -8,9 +8,13 @@ import (
 	"strings"
 )
 
-const HeaderAuthorization = "Authorization"
+// ErrInvalidJWT is returned when a JWT-string cannot be parsed.
+var ErrInvalidJWT = errors.New("invalid jwt")
 
-// TokenFromRequest extracts a bearer token from the Authorization header of an [http.Request].
+// HeaderAuthorization is the HTTP Authorization header name.
+const HeaderAuthorization string = "Authorization"
+
+// TokenFromRequest extracts the bearer token from the Authorization header of an [http.Request] if present.
 // It returns the token string and a boolean indicating whether a bearer token was present.
 // This function does not validate the token in any way.
 func TokenFromRequest(req *http.Request) (token string, ok bool) {
@@ -24,18 +28,19 @@ func TokenFromRequest(req *http.Request) (token string, ok bool) {
 	return
 }
 
+// JWT represents the parsed components of a JSON Web Token.
 type JWT struct {
-	Header    map[string]any
-	Claims    map[string]any
-	Signature []byte
+	Header    map[string]any // Header contains the JWT header claims.
+	Claims    map[string]any // Claims contains the JWT payload claims.
+	Signature []byte         // Signature is the JWT signature.
 }
 
-// ParseJWT parses a JWT string into its components: header, claims, and signature.
-// It returns a [JWT] and an [error] if the parsing fails.
+// ParseJWT parses a JWT-string into its components: header, claims, and signature.
+// It returns a [JWT] or an [error] if the parsing fails.
 func ParseJWT(jwtStr string) (*JWT, error) {
 	parts := strings.Split(jwtStr, ".")
 	if len(parts) != 3 {
-		return nil, errors.New("texas: invalid jwt")
+		return nil, ErrInvalidJWT
 	}
 	h, err := parseJWTPart(parts[0])
 	if err != nil {
