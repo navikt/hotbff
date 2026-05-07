@@ -1,6 +1,8 @@
 package texas
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/navikt/hotbff/internal/assert"
@@ -54,7 +56,8 @@ func Test_isPublic(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			public, reason := isPublic(tt.args.urlPath, tt.args.basePath, tt.args.opts)
+			req := httptest.NewRequest(http.MethodGet, tt.args.urlPath, nil)
+			public, reason := isPublic(req, tt.args.basePath, tt.args.opts)
 			assert.Equal(t, public, tt.public)
 			assert.Equal(t, reason, tt.reason)
 		})

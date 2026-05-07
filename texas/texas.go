@@ -42,7 +42,7 @@ func (idp IdentityProvider) IntrospectToken(ctx context.Context, token string) (
 	return &ti, nil
 }
 
-func (idp IdentityProvider) Set() bool {
+func (idp IdentityProvider) Enabled() bool {
 	return idp == EntraID || idp == IDPorten || idp == Maskinporten || idp == TokenX
 }
 

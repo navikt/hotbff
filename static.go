@@ -37,7 +37,7 @@ func indexHandler(rootDir string, opts *decorator.Options) http.Handler {
 	if opts == nil {
 		data, err := os.ReadFile(name)
 		if err != nil {
-			slog.Error("hotbff: failed reading file", "name", name, "error", err)
+			slog.Error("failed reading file", "name", name, "error", err)
 			os.Exit(1)
 		}
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {

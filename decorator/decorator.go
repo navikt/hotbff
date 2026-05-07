@@ -12,6 +12,8 @@ import (
 	"strconv"
 )
 
+var log = slog.Default().With("package", "decorator")
+
 // Fetch retrieves decorator [Elements] using the given [Options].
 func Fetch(ctx context.Context, opts *Options) (*Elements, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, getDecoratorURL(), nil)
@@ -19,7 +21,7 @@ func Fetch(ctx context.Context, opts *Options) (*Elements, error) {
 		return nil, err
 	}
 	req.URL.RawQuery = opts.Query().Encode()
-	slog.Debug("decorator: fetching elements", "url", req.URL)
+	log.DebugContext(ctx, "fetching elements", "url", req.URL)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -27,7 +29,7 @@ func Fetch(ctx context.Context, opts *Options) (*Elements, error) {
 	//goland:noinspection GoUnhandledErrorResult
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("decorator: unexpected statusCode: %d", res.StatusCode)
+		return nil, fmt.Errorf("unexpected response from decorator, statusCode: %d", res.StatusCode)
 	}
 	var elems Elements
 	if err := json.NewDecoder(res.Body).Decode(&elems); err != nil {

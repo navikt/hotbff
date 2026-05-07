@@ -57,7 +57,7 @@ func newReverseProxy(opts *Options) (h http.Handler, err error) {
 	if err != nil {
 		return nil, fmt.Errorf("proxy: invalid target: %w", err)
 	}
-	if opts.IDP == nil || !opts.IDP.Set() {
+	if opts.IDP == nil || !opts.IDP.Enabled() {
 		h, err = publicBackend(t), nil
 	} else {
 		h, err = protectedBackend(t, opts.IDP, opts.IDPTarget), nil

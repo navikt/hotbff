@@ -2,11 +2,13 @@ package texas
 
 import (
 	"fmt"
+	"net/http"
 	"path"
 	"strings"
 )
 
-func isPublic(urlPath string, basePath string, opts *Options) (bool, string) {
+func isPublic(req *http.Request, basePath string, opts *Options) (bool, string) {
+	urlPath := req.URL.Path
 	relativePath := strings.TrimPrefix(urlPath, strings.TrimSuffix(basePath, "/"))
 	// Check file extensions
 	if extension := path.Ext(urlPath); opts.PublicExtensions.Has(extension) {

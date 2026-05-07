@@ -93,7 +93,7 @@ func Configure(mux *http.ServeMux, opts *Options) {
 		os.Exit(1)
 	}
 
-	baseMux.Handle("/", texas.Protected(opts.IDP, opts.TexasOpts, basePath, protectedMux))
+	baseMux.Handle("/", texas.Protected(basePath, protectedMux))
 	mux.Handle(basePath, maybeStripPrefix(path.Join(basePath), baseMux))
 }
 

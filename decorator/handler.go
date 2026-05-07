@@ -15,7 +15,7 @@ import (
 func Handler(name string, opts *Options) http.Handler {
 	tmpl, err := template.ParseFiles(name)
 	if err != nil {
-		slog.Error("decorator: failed parsing template", "name", name, "error", err)
+		slog.Error("failed parsing decorator template", "name", name, "error", err)
 		os.Exit(1)
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -29,16 +29,16 @@ func Handler(name string, opts *Options) http.Handler {
 		elems, err := Fetch(ctx, opts)
 		if err != nil {
 			if errors.Is(err, context.Canceled) {
-				w.WriteHeader(http.StatusRequestTimeout)
+				w.WriteHeader(http.StatusGatewayTimeout)
 			} else {
-				slog.ErrorContext(ctx, "decorator: failed fetching elements", "error", err)
+				slog.ErrorContext(ctx, "failed fetching decorator elements", "error", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			return
 		}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		if err := tmpl.Execute(w, elems); err != nil {
-			slog.ErrorContext(ctx, "decorator: failed executing template", "error", err)
+			slog.ErrorContext(ctx, "failed executing decorator template", "error", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	})

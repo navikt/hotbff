@@ -25,7 +25,7 @@ func (idp *IdentityProvider) IntrospectToken(_ context.Context, _ string) (*texa
 	return &texas.TokenIntrospection{Active: idp.Active}, idp.Err
 }
 
-func (idp *IdentityProvider) Set() bool {
+func (idp *IdentityProvider) Enabled() bool {
 	return idp != nil
 }
 
