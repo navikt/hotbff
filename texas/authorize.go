@@ -6,10 +6,10 @@ import (
 	"net/http"
 )
 
-// Authenticate is a middleware that validates bearer tokens by introspecting them with the provided TokenIntrospector.
+// Authorize is a middleware that validates bearer tokens by introspecting them with the provided [TokenIntrospector].
 // If a valid bearer token is present and token introspection succeeds with an active token, the [User] is added to the context
 // with Authenticated set to true. Otherwise, a non-authenticated User is added to the context.
-func Authenticate(idp TokenIntrospector, next http.Handler) http.Handler {
+func Authorize(idp TokenIntrospector, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 		user := &User{Authenticated: false}

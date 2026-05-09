@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/navikt/hotbff/internal/assert"
-	"github.com/navikt/hotbff/internal/test"
 	"github.com/navikt/hotbff/texas"
 )
 
@@ -27,7 +26,7 @@ func TestHandler(t *testing.T) {
 	opts := &Options{
 		Target:      backend.URL,
 		StripPrefix: false,
-		IDP:         test.NewIdentityProvider(accessToken, true, nil),
+		IDP:         texas.NewTestIDP(accessToken, true, nil),
 		IDPTarget:   target,
 	}
 

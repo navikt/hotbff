@@ -27,13 +27,13 @@ func init() {
 
 // Options for the server.
 type Options struct {
-	BasePath      string                  // the base path to serve the application on (defaults to "/")
-	RootDir       string                  // the directory to serve static files from (defaults to "dist")
-	DecoratorOpts *decorator.Options      // options for the HTML decorator
-	Proxy         proxy.Map               // map of proxy options keyed by URL prefix
-	IDP           texas.TokenIntrospector // identity provider to use for token introspection (if nil, no validation is performed)
-	TexasOpts     *texas.Options          // options for Texas
-	EnvKeys       []string                // list of environment variable keys to expose to the frontend (via "/settings.js")
+	BasePath      string                  // The base path to serve the application on (defaults to "/").
+	RootDir       string                  // The directory to serve static files from (defaults to "dist").
+	DecoratorOpts *decorator.Options      // Options for the HTML decorator.
+	Proxy         proxy.Map               // Map of proxy options keyed by URL prefix.
+	IDP           texas.TokenIntrospector // Identity provider to use for token introspection (if nil, no validation is performed).
+	PublicPaths   []string                // Options for Texas.
+	EnvKeys       []string                // List of environment variable keys to expose to the frontend (via "/settings.js").
 }
 
 // Start starts the HTTP server with the given [Options].
@@ -63,14 +63,6 @@ func Configure(mux *http.ServeMux, opts *Options) {
 	rootDir := opts.RootDir
 	if rootDir == "" {
 		rootDir = "dist"
-	}
-
-	texasOpts := opts.TexasOpts
-	if texasOpts == nil {
-		texasOpts = texas.DefaultOptions()
-	} else {
-		texasOpts = texasOpts.Clone()
-		texasOpts.AddDefaults()
 	}
 
 	// / (public)

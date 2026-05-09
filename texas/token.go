@@ -14,11 +14,13 @@ var ErrInvalidJWT = errors.New("invalid jwt")
 // HeaderAuthorization is the HTTP Authorization header name.
 const HeaderAuthorization string = "Authorization"
 
-// TokenFromRequest extracts the bearer token from the Authorization header of an [http.Request] if present.
-// It returns the token string and a boolean indicating whether a bearer token was present.
-// This function does not validate the token in any way.
+// TokenFromRequest extracts the bearer token from the Authorization header of an [http.Request].
+// It returns the token string and a boolean indicating whether a bearer token was found.
+//
+// NB! This function does not validate the token in any way.
 func TokenFromRequest(req *http.Request) (token string, ok bool) {
-	token, ok = strings.CutPrefix(req.Header.Get(HeaderAuthorization), "Bearer ")
+	h := req.Header.Get(HeaderAuthorization)
+	token, ok = strings.CutPrefix(h, "Bearer ")
 	if token == "" {
 		ok = false
 	}
