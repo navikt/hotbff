@@ -83,6 +83,7 @@ func post(ctx context.Context, url string, fv url.Values, v any) error {
 	if err != nil {
 		return err
 	}
+
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	res, err := client.Do(req)
@@ -91,8 +92,10 @@ func post(ctx context.Context, url string, fv url.Values, v any) error {
 	}
 	//goland:noinspection GoUnhandledErrorResult
 	defer res.Body.Close()
+
 	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("texas: unexpected statusCode: %d", res.StatusCode)
+		return fmt.Errorf("unexpected statusCode: %d", res.StatusCode)
 	}
+
 	return json.NewDecoder(res.Body).Decode(v)
 }

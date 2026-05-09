@@ -38,11 +38,13 @@ func Fetch(ctx context.Context, opts *Options) (*Elements, error) {
 	if opts == nil {
 		opts = &Options{}
 	}
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, decoratorURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("decorator: %w", err)
 	}
 	req.URL.RawQuery = opts.Query().Encode()
+
 	log.DebugContext(ctx, "fetching elements", "url", req.URL)
 	res, err := client.Do(req)
 	if err != nil {
@@ -50,9 +52,11 @@ func Fetch(ctx context.Context, opts *Options) (*Elements, error) {
 	}
 	//goland:noinspection GoUnhandledErrorResult
 	defer res.Body.Close()
+
 	if res.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("decorator: unexpected response, statusCode: %d", res.StatusCode)
 	}
+
 	var elems Elements
 	if err := json.NewDecoder(res.Body).Decode(&elems); err != nil {
 		return nil, fmt.Errorf("decorator: %w", err)
@@ -81,20 +85,26 @@ func (opts *Options) Query() url.Values {
 	if opts == nil {
 		return q
 	}
+
 	q.Set("context", opts.Context)
+
 	if opts.Chatbot != nil {
 		q.Set("chatbot", strconv.FormatBool(*opts.Chatbot))
 	}
+
 	if opts.Language != "" {
 		q.Set("language", opts.Language)
 	}
+
 	if len(opts.AvailableLanguages) > 0 {
 		b, _ := json.Marshal(opts.AvailableLanguages)
 		q.Set("availableLanguages", string(b))
 	}
+
 	if opts.LogoutWarning != nil {
 		q.Set("logoutWarning", strconv.FormatBool(*opts.LogoutWarning))
 	}
+
 	return q
 }
 

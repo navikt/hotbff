@@ -17,7 +17,7 @@ var validCookieLanguages = []string{"nb", "nn"}
 func Handler(name string, opts *Options) (http.Handler, error) {
 	tmpl, err := template.ParseFiles(name)
 	if err != nil {
-		return nil, fmt.Errorf("parse template: %w", err)
+		return nil, fmt.Errorf("parsing template: %w", err)
 	}
 	if opts == nil {
 		opts = &Options{}
