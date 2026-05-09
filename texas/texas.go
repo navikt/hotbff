@@ -9,7 +9,12 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 )
+
+var client = &http.Client{
+	Timeout: 5 * time.Second,
+}
 
 func (idp IdentityProvider) GetToken(ctx context.Context, target string) (*TokenSet, error) {
 	fv := newFormValues(idp)
@@ -80,7 +85,7 @@ func post(ctx context.Context, url string, fv url.Values, v any) error {
 	}
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	res, err := http.DefaultClient.Do(req)
+	res, err := client.Do(req)
 	if err != nil {
 		return err
 	}

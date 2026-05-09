@@ -20,7 +20,8 @@ func TestHandler(t *testing.T) {
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 
-	h := Handler(indexPath, &Options{Context: "privatperson"})
+	h, err := Handler(indexPath, &Options{Context: ContextPrivatperson})
+	assert.Nil(t, err)
 	h.ServeHTTP(w, req)
 
 	res := w.Result()

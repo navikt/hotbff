@@ -74,9 +74,11 @@ func Configure(mux *http.ServeMux, opts *Options) {
 	baseMux.Handle("GET /settings.js", settingsHandler(basePath, opts.EnvKeys))
 	// baseMux.Handle("GET /auth/status", opts.IDP.Status())
 
+	index, _ := indexHandler(rootDir, opts.DecoratorOpts) // todo: handle error
+
 	// /base/path/ (protected)
 	protectedMux := http.NewServeMux()
-	protectedMux.Handle("/", staticHandler(rootDir, opts.DecoratorOpts))
+	protectedMux.Handle("/", staticHandler(rootDir, index))
 
 	// /base/path/proxy/prefix/ (protected)
 	err := proxy.Configure(protectedMux, opts.Proxy)

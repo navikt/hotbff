@@ -16,8 +16,11 @@ func TestStaticHandler(t *testing.T) {
 	err := os.WriteFile(indexPath, []byte("<!DOCTYPE html><html><body>test</body></html>"), 0644)
 	assert.Nil(t, err)
 
+	index, err := indexHandler(rootDir, nil)
+	assert.Nil(t, err)
+
 	r := http.NewServeMux()
-	r.Handle("/test/", http.StripPrefix("/test", staticHandler(rootDir, nil)))
+	r.Handle("/test/", http.StripPrefix("/test", staticHandler(rootDir, index)))
 
 	h := http.NewServeMux()
 	h.Handle("/", r)

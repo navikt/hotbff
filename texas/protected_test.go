@@ -44,9 +44,9 @@ func callProtectedHandler(t *testing.T, userToken string, active bool) *http.Res
 		req.Header.Set(HeaderAuthorization, "Bearer "+userToken)
 	}
 
-	h := Protected("/", http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+	h := Authorize(EntraID, Protected("/", http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
-	}))
+	})))
 	h.ServeHTTP(w, req)
 
 	return w.Result()

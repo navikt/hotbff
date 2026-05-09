@@ -3,26 +3,30 @@ package decorator
 import (
 	"context"
 	"errors"
+	"fmt"
 	"html/template"
-	"log/slog"
 	"net/http"
-	"os"
+	"slices"
 )
 
-// Handler returns a [http.Handler] that renders the named template file
+var validCookieLanguages = []string{"nb", "nn"}
+
+// Handler returns an [http.Handler] that renders the named template file
 // decorated with [Elements] fetched using the given [Options].
 // If fetching the elements fails, it returns a 500 Internal Server Error.
-func Handler(name string, opts *Options) http.Handler {
+func Handler(name string, opts *Options) (http.Handler, error) {
 	tmpl, err := template.ParseFiles(name)
 	if err != nil {
-		slog.Error("failed parsing decorator template", "name", name, "error", err)
-		os.Exit(1)
+		return nil, fmt.Errorf("parse template: %w", err)
+	}
+	if opts == nil {
+		opts = &Options{}
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 
 		cookie, err := req.Cookie("decorator-language")
-		if err == nil && (cookie.Value == "nb" || cookie.Value == "nn") {
+		if err == nil && slices.Contains(validCookieLanguages, cookie.Value) {
 			opts.Language = cookie.Value
 		}
 
@@ -31,15 +35,18 @@ func Handler(name string, opts *Options) http.Handler {
 			if errors.Is(err, context.Canceled) {
 				w.WriteHeader(http.StatusGatewayTimeout)
 			} else {
-				slog.ErrorContext(ctx, "failed fetching decorator elements", "error", err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				httpError(ctx, w, "fetching elements", err)
 			}
 			return
 		}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		if err := tmpl.Execute(w, elems); err != nil {
-			slog.ErrorContext(ctx, "failed executing decorator template", "error", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			httpError(ctx, w, "executing template", err)
 		}
-	})
+	}), nil
+}
+
+func httpError(ctx context.Context, w http.ResponseWriter, msg string, err error) {
+	log.ErrorContext(ctx, msg, "error", err)
+	http.Error(w, msg, http.StatusInternalServerError)
 }
