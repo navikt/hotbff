@@ -26,7 +26,6 @@ func TestHandler(t *testing.T) {
 	opts := &Options{
 		Target:      backend.URL,
 		StripPrefix: false,
-		IDP:         texas.NewTestIDP(accessToken, true, nil),
 		IDPTarget:   target,
 	}
 
@@ -35,7 +34,8 @@ func TestHandler(t *testing.T) {
 	req = req.WithContext(texas.NewContext(req.Context(), user))
 	req.Header.Set(texas.HeaderAuthorization, "Bearer "+user.Token)
 
-	h, err := newReverseProxy(opts)
+	idp := texas.NewTestIDP("accessToken", true, nil)
+	h, err := newReverseProxy(idp, opts)
 	assert.Nil(t, err)
 	h.ServeHTTP(w, req)
 

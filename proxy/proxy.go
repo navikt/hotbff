@@ -18,17 +18,16 @@ var (
 
 // Options for the proxy.
 type Options struct {
-	Target      string               `json:"target"`      // The URL to proxy to (backend).
-	StripPrefix bool                 `json:"stripPrefix"` // Whether to strip the prefix from the request URL or not.
-	IDP         texas.TokenExchanger `json:"idp"`         // Identity provider for token exchange (if unset, no token exchange is performed).
-	IDPTarget   string               `json:"idpTarget"`   // The target audience used in the token exchange (required if IDP is set).
+	Target      string `json:"target"`      // The URL to proxy to (backend).
+	StripPrefix bool   `json:"stripPrefix"` // Whether to strip the prefix from the request URL or not.
+	IDPTarget   string `json:"idpTarget"`   // The target audience used in the token exchange (required if IDP is set).
 }
 
 // Map is a map of proxy [Options] keyed by URL prefix.
 type Map map[string]*Options
 
 // Configure adds proxy handlers to the given [http.ServeMux] based on the provided [Map].
-func Configure(mux *http.ServeMux, proxy Map) error {
+func Configure(mux *http.ServeMux, proxy Map, idp texas.IdentityProvider) error {
 	if mux == nil {
 		mux = http.DefaultServeMux
 	}
@@ -45,7 +44,7 @@ func Configure(mux *http.ServeMux, proxy Map) error {
 		}
 
 		log.Info("adding proxy", "prefix", prefix, "target", opts.Target)
-		h, err := newReverseProxy(opts)
+		h, err := newReverseProxy(idp, opts)
 		if err != nil {
 			return err
 		}
@@ -60,16 +59,21 @@ func Configure(mux *http.ServeMux, proxy Map) error {
 	return nil
 }
 
-func newReverseProxy(opts *Options) (http.Handler, error) {
+func newReverseProxy(idp texas.IdentityProvider, opts *Options) (http.Handler, error) {
 	t, err := url.Parse(opts.Target)
 	if err != nil {
 		return nil, fmt.Errorf("invalid target: %w", err)
 	}
 
-	if opts.IDP == nil || !opts.IDP.Enabled() {
+	if opts.IDPTarget == "" {
 		return publicBackend(t), nil
 	}
-	return protectedBackend(t, opts.IDP, opts.IDPTarget), nil
+
+	if idp == nil {
+		return nil, errors.New("proxy: idp is required when idpTarget is set")
+	}
+
+	return texas.Authenticate(idp, protectedBackend(t, idp, opts.IDPTarget)), nil
 }
 
 func publicBackend(target *url.URL) *httputil.ReverseProxy {

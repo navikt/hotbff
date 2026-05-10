@@ -36,16 +36,8 @@ func (idp *testIDP) Status() http.Handler {
 	})
 }
 
-func (idp *testIDP) Enabled() bool {
-	return idp != nil
-}
-
 func (idp *testIDP) LogValue() slog.Value {
 	return slog.StringValue("testIDP")
-}
-
-func (idp *testIDP) String() string {
-	return "testIDP"
 }
 
 func NewTestIDP(accessToken string, active bool, err error) *testIDP {

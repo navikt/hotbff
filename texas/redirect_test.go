@@ -3,10 +3,57 @@ package texas
 import (
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	"github.com/navikt/hotbff/internal/assert"
 )
+
+func TestRedirectActiveToken(t *testing.T) {
+	res := callRedirectHandler(t, "userToken", true)
+	//goland:noinspection GoUnhandledErrorResult
+	defer res.Body.Close()
+	assert.Equal(t, res.StatusCode, http.StatusOK)
+	assert.Equal(t, getLocation(t, res), "")
+}
+
+func TestRedirectInactiveToken(t *testing.T) {
+	res := callRedirectHandler(t, "userToken", false)
+	//goland:noinspection GoUnhandledErrorResult
+	defer res.Body.Close()
+	assert.Equal(t, res.StatusCode, http.StatusTemporaryRedirect)
+	assert.Equal(t, getLocation(t, res), "/oauth2/login?redirect="+url.QueryEscape("/"))
+}
+
+func TestRedirectMissingToken(t *testing.T) {
+	res := callRedirectHandler(t, "", true)
+	//goland:noinspection GoUnhandledErrorResult
+	defer res.Body.Close()
+	assert.Equal(t, res.StatusCode, http.StatusTemporaryRedirect)
+	assert.Equal(t, getLocation(t, res), "/oauth2/login?redirect="+url.QueryEscape("/"))
+}
+
+func callRedirectHandler(t *testing.T, userToken string, active bool) *http.Response {
+	t.Helper()
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	if userToken != "" {
+		req.Header.Set(HeaderAuthorization, "Bearer "+userToken)
+	}
+
+	idp := NewTestIDP(userToken, active, nil)
+	h := Authenticate(idp, Redirect("/", http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})))
+	h.ServeHTTP(w, req)
+
+	return w.Result()
+}
+
+func getLocation(t *testing.T, res *http.Response) string {
+	t.Helper()
+	return res.Header.Get("Location")
+}
 
 func TestLoginRedirect(t *testing.T) {
 	tests := []struct {

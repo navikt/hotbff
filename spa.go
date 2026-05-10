@@ -5,6 +5,8 @@ import (
 	"io/fs"
 	"net/http"
 	"strings"
+
+	"github.com/navikt/hotbff/httpx"
 )
 
 type spa struct {
@@ -55,9 +57,9 @@ func (s *spa) handleError(w http.ResponseWriter, req *http.Request, err error) b
 	case errors.Is(err, fs.ErrNotExist):
 		s.index.ServeHTTP(w, req)
 	case errors.Is(err, fs.ErrPermission):
-		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+		httpx.ErrorCode(w, http.StatusForbidden)
 	default:
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		httpx.ErrorCode(w, http.StatusInternalServerError)
 	}
 
 	return true

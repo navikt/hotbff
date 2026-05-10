@@ -8,7 +8,7 @@ import (
 	"github.com/navikt/hotbff/internal/assert"
 )
 
-func TestAuthorizeMiddleware(t *testing.T) {
+func TestAuthMiddleware(t *testing.T) {
 	tests := []struct {
 		name  string
 		token string
@@ -34,7 +34,7 @@ func TestAuthorizeMiddleware(t *testing.T) {
 			active := tt.token == "valid_token"
 
 			idp := NewTestIDP("", active, nil)
-			handler := Authorize(idp, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			handler := Authenticate(idp, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 				user = FromContext(req.Context())
 				w.WriteHeader(http.StatusOK)
 				w.Write([]byte("OK"))

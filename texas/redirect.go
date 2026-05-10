@@ -5,6 +5,20 @@ import (
 	"net/url"
 )
 
+// Redirect is a middleware that checks if the user is authenticated. If not, it redirects to the login page.
+func Redirect(basePath string, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		ctx := req.Context()
+		user := FromContext(ctx)
+		if user.Authenticated {
+			next.ServeHTTP(w, req)
+		} else {
+			log.DebugContext(ctx, "user unauthenticated, redirecting to login")
+			loginRedirect(w, req, basePath)
+		}
+	})
+}
+
 func loginRedirect(w http.ResponseWriter, req *http.Request, basePath string) {
 	ctx := req.Context()
 

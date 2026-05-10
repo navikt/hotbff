@@ -13,7 +13,11 @@ import (
 )
 
 const (
-	idpFormKey       = "identity_provider"
+	entraIDProvider  = "azuread"
+	idPortenProvider = "idporten"
+	tokenXProvider   = "tokenx"
+
+	providerFormKey  = "identity_provider"
 	targetFormKey    = "target"
 	tokenFormKey     = "token"
 	userTokenFormKey = "user_token"
@@ -29,8 +33,13 @@ var (
 	}
 )
 
-func (idp IdentityProvider) GetToken(ctx context.Context, target string) (*TokenSet, error) {
-	fv := newFormValues(idp)
+type idp struct {
+	provider         string
+	exchangeProvider string
+}
+
+func (idp *idp) GetToken(ctx context.Context, target string) (*TokenSet, error) {
+	fv := newFormValues(idp.provider)
 	fv.Set(targetFormKey, target)
 	var ts TokenSet
 	if err := post(ctx, tokenURL, fv, &ts); err != nil {
@@ -39,8 +48,8 @@ func (idp IdentityProvider) GetToken(ctx context.Context, target string) (*Token
 	return &ts, nil
 }
 
-func (idp IdentityProvider) ExchangeToken(ctx context.Context, target string, userToken string) (*TokenSet, error) {
-	fv := newFormValues(idp)
+func (idp *idp) ExchangeToken(ctx context.Context, target string, userToken string) (*TokenSet, error) {
+	fv := newFormValues(idp.exchangeProvider)
 	fv.Set(targetFormKey, target)
 	fv.Set(userTokenFormKey, userToken)
 	var ts TokenSet
@@ -50,8 +59,8 @@ func (idp IdentityProvider) ExchangeToken(ctx context.Context, target string, us
 	return &ts, nil
 }
 
-func (idp IdentityProvider) IntrospectToken(ctx context.Context, token string) (*TokenIntrospection, error) {
-	fv := newFormValues(idp)
+func (idp *idp) IntrospectToken(ctx context.Context, token string) (*TokenIntrospection, error) {
+	fv := newFormValues(idp.provider)
 	fv.Set(tokenFormKey, token)
 	var ti TokenIntrospection
 	if err := post(ctx, tokenIntrospectionURL, fv, &ti); err != nil {
@@ -60,21 +69,13 @@ func (idp IdentityProvider) IntrospectToken(ctx context.Context, token string) (
 	return &ti, nil
 }
 
-func (idp IdentityProvider) Enabled() bool {
-	return idp == EntraID || idp == IDPorten || idp == Maskinporten || idp == TokenX
+func (idp *idp) LogValue() slog.Value {
+	return slog.StringValue(idp.provider)
 }
 
-func (idp IdentityProvider) LogValue() slog.Value {
-	return slog.StringValue(string(idp))
-}
-
-func (idp IdentityProvider) String() string {
-	return string(idp)
-}
-
-func newFormValues(idp IdentityProvider) url.Values {
+func newFormValues(provider string) url.Values {
 	fv := url.Values{}
-	fv.Set(idpFormKey, string(idp))
+	fv.Set(providerFormKey, provider)
 	return fv
 }
 
