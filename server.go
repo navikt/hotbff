@@ -78,7 +78,7 @@ func Configure(mux *http.ServeMux, opts *Options) {
 
 	// /base/path/ (protected)
 	protectedMux := http.NewServeMux()
-	protectedMux.Handle("/", staticHandler(rootDir, index))
+	protectedMux.Handle("/", newSPAHandler(rootDir, index))
 
 	// /base/path/proxy/prefix/ (protected)
 	err := proxy.Configure(protectedMux, opts.Proxy)
