@@ -1,27 +1,30 @@
 package texas
 
 import (
-	"log/slog"
 	"net/http"
 	"net/url"
-	"strings"
 )
 
 func loginRedirect(w http.ResponseWriter, req *http.Request, basePath string) {
 	ctx := req.Context()
-	loginURL, _ := url.JoinPath(basePath, "/oauth2/login")
 
-	returnToURL := req.URL.Path
-	if req.URL.RawQuery != "" {
-		returnToURL = returnToURL + "?" + req.URL.RawQuery
+	loginPath, err := url.JoinPath(basePath, "oauth2/login")
+	if err != nil {
+		http.Error(w, "invalid login path", http.StatusInternalServerError)
+		return
 	}
-	redirectBase := strings.TrimSuffix(basePath, "/")
-	loginURL = loginURL + "?redirect=" + redirectBase + url.QueryEscape(returnToURL)
 
-	slog.InfoContext(ctx, "texas: login redirect",
-		"loginURL", loginURL,
-		"returnToURL", returnToURL,
-		"req.URL.Path", req.URL.Path,
-		"basePath", basePath)
-	http.Redirect(w, req, loginURL, http.StatusTemporaryRedirect)
+	loginURL, err := url.Parse(loginPath)
+	if err != nil {
+		http.Error(w, "invalid login url", http.StatusInternalServerError)
+		return
+	}
+
+	q := loginURL.Query()
+	q.Set("redirect", req.URL.RequestURI())
+	loginURL.RawQuery = q.Encode()
+
+	log.DebugContext(ctx, "login redirect", "loginURL", loginURL)
+
+	http.Redirect(w, req, loginURL.String(), http.StatusTemporaryRedirect)
 }

@@ -12,16 +12,29 @@ import (
 	"time"
 )
 
-var client = &http.Client{
-	Timeout: 5 * time.Second,
-}
+const (
+	idpFormKey       = "identity_provider"
+	targetFormKey    = "target"
+	tokenFormKey     = "token"
+	userTokenFormKey = "user_token"
+)
+
+var (
+	tokenURL              = os.Getenv("NAIS_TOKEN_ENDPOINT")
+	tokenExchangeURL      = os.Getenv("NAIS_TOKEN_EXCHANGE_ENDPOINT")
+	tokenIntrospectionURL = os.Getenv("NAIS_TOKEN_INTROSPECTION_ENDPOINT")
+
+	client = &http.Client{
+		Timeout: 5 * time.Second,
+	}
+)
 
 func (idp IdentityProvider) GetToken(ctx context.Context, target string) (*TokenSet, error) {
 	fv := newFormValues(idp)
 	fv.Set(targetFormKey, target)
 	var ts TokenSet
 	if err := post(ctx, tokenURL, fv, &ts); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("texas: token retrieval failed: %w", err)
 	}
 	return &ts, nil
 }
@@ -32,7 +45,7 @@ func (idp IdentityProvider) ExchangeToken(ctx context.Context, target string, us
 	fv.Set(userTokenFormKey, userToken)
 	var ts TokenSet
 	if err := post(ctx, tokenExchangeURL, fv, &ts); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("texas: token exchange failed: %w", err)
 	}
 	return &ts, nil
 }
@@ -42,7 +55,7 @@ func (idp IdentityProvider) IntrospectToken(ctx context.Context, token string) (
 	fv.Set(tokenFormKey, token)
 	var ti TokenIntrospection
 	if err := post(ctx, tokenIntrospectionURL, fv, &ti); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("texas: token introspection failed: %w", err)
 	}
 	return &ti, nil
 }
@@ -58,19 +71,6 @@ func (idp IdentityProvider) LogValue() slog.Value {
 func (idp IdentityProvider) String() string {
 	return string(idp)
 }
-
-const (
-	idpFormKey       = "identity_provider"
-	targetFormKey    = "target"
-	tokenFormKey     = "token"
-	userTokenFormKey = "user_token"
-)
-
-var (
-	tokenURL              = os.Getenv("NAIS_TOKEN_ENDPOINT")
-	tokenExchangeURL      = os.Getenv("NAIS_TOKEN_EXCHANGE_ENDPOINT")
-	tokenIntrospectionURL = os.Getenv("NAIS_TOKEN_INTROSPECTION_ENDPOINT")
-)
 
 func newFormValues(idp IdentityProvider) url.Values {
 	fv := url.Values{}
@@ -94,7 +94,7 @@ func post(ctx context.Context, url string, fv url.Values, v any) error {
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected statusCode: %d", res.StatusCode)
+		return fmt.Errorf("texas: unexpected statusCode: %d", res.StatusCode)
 	}
 
 	return json.NewDecoder(res.Body).Decode(v)

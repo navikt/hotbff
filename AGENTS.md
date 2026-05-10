@@ -9,3 +9,4 @@
 - No external dependencies
 - Use context.Context when available
 - Use slog for logging
+- Use assertion helpers from internal/assert when generating tests.

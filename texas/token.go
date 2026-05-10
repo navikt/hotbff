@@ -9,7 +9,7 @@ import (
 )
 
 // ErrInvalidJWT is returned when a JWT-string cannot be parsed.
-var ErrInvalidJWT = errors.New("invalid jwt")
+var ErrInvalidJWT = errors.New("texas: invalid jwt")
 
 // HeaderAuthorization is the HTTP Authorization header name.
 const HeaderAuthorization string = "Authorization"

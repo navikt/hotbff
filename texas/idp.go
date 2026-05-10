@@ -1,6 +1,9 @@
 package texas
 
-import "context"
+import (
+	"context"
+	"net/http"
+)
 
 type IdentityProvider string
 
@@ -41,5 +44,6 @@ type TokenIntrospector interface {
 	// IntrospectToken validates the given token from the identity provider.
 	// It returns a [TokenIntrospection] indicating whether the token is active.
 	IntrospectToken(ctx context.Context, token string) (*TokenIntrospection, error)
+	Status() http.Handler
 	Enabled() bool
 }

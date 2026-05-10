@@ -72,7 +72,7 @@ func Configure(mux *http.ServeMux, opts *Options) {
 	// /base/path/ (public)
 	baseMux := http.NewServeMux()
 	baseMux.Handle("GET /settings.js", settingsHandler(basePath, opts.EnvKeys))
-	// baseMux.Handle("GET /auth/status", opts.IDP.Status())
+	baseMux.Handle("GET /auth/status", opts.IDP.Status())
 
 	index, _ := indexHandler(rootDir, opts.DecoratorOpts) // todo: handle error
 
