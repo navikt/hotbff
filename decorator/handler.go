@@ -17,8 +17,9 @@ var validCookieLanguages = []string{"nb", "nn"}
 func Handler(name string, opts *Options) (http.Handler, error) {
 	tmpl, err := template.ParseFiles(name)
 	if err != nil {
-		return nil, fmt.Errorf("parsing template: %w", err)
+		return nil, fmt.Errorf("failed parsing template %q: %w", name, err)
 	}
+
 	if opts == nil {
 		opts = &Options{}
 	}
@@ -32,21 +33,25 @@ func Handler(name string, opts *Options) (http.Handler, error) {
 
 		elems, err := Fetch(ctx, opts)
 		if err != nil {
-			if errors.Is(err, context.Canceled) {
+			switch {
+			case errors.Is(err, context.Canceled):
+				return
+			case errors.Is(err, context.DeadlineExceeded):
 				w.WriteHeader(http.StatusGatewayTimeout)
-			} else {
-				httpError(ctx, w, "fetching elements", err)
+			default:
+				serveError(ctx, w, "failed fetching elements", err)
 			}
 			return
 		}
+
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		if err := tmpl.Execute(w, elems); err != nil {
-			httpError(ctx, w, "executing template", err)
+			serveError(ctx, w, "failed executing template", err)
 		}
 	}), nil
 }
 
-func httpError(ctx context.Context, w http.ResponseWriter, msg string, err error) {
+func serveError(ctx context.Context, w http.ResponseWriter, msg string, err error) {
 	log.ErrorContext(ctx, msg, "error", err)
 	http.Error(w, msg, http.StatusInternalServerError)
 }

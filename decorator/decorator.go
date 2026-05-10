@@ -72,11 +72,11 @@ type AvailableLanguage struct {
 
 // Options for the decorator.
 type Options struct {
-	Context            string // The context, e.g. "privatperson" | "arbeidsgiver" | "samarbeidspartner".
-	Chatbot            *bool  // Enable the chatbot if true.
-	Language           string // Locale, e.g. "nb".
-	AvailableLanguages []AvailableLanguage
-	LogoutWarning      *bool // Show a logout warning if true.
+	Context            string              // The context, e.g. "privatperson" | "arbeidsgiver" | "samarbeidspartner".
+	Chatbot            *bool               // Enable the chatbot if true.
+	Language           string              // Locale, e.g. "nb".
+	AvailableLanguages []AvailableLanguage // Available languages for the language selector in the decorator.
+	LogoutWarning      *bool               // Show a logout warning if true.
 }
 
 // Query is the decorator [Options] expressed as URL query parameters.
