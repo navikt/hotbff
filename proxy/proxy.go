@@ -69,7 +69,6 @@ func newReverseProxy(opts *Options) (http.Handler, error) {
 	if opts.IDP == nil || !opts.IDP.Enabled() {
 		return publicBackend(t), nil
 	}
-
 	return protectedBackend(t, opts.IDP, opts.IDPTarget), nil
 }
 
