@@ -47,6 +47,13 @@ func NotNil(t *testing.T, got any) {
 	}
 }
 
+func NotEmpty(t *testing.T, got string) {
+	t.Helper()
+	if got == "" {
+		t.Fatalf("assert.NotEmpty: got empty")
+	}
+}
+
 func Contains(t *testing.T, s, substr string) {
 	t.Helper()
 	if !strings.Contains(s, substr) {

@@ -33,7 +33,6 @@ func main() {
 			"/api/": &proxy.Options{
 				Target:      os.Getenv("API_URL"), // backend URL
 				StripPrefix: false,
-				IDP:         texas.TokenX, // identity provider for token exchange
 				IDPTarget:   os.Getenv("API_SCOPE"),
 			},
 			"/other-api/": &proxy.Options{

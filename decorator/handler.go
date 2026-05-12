@@ -3,43 +3,56 @@ package decorator
 import (
 	"context"
 	"errors"
+	"fmt"
 	"html/template"
-	"log/slog"
 	"net/http"
-	"os"
+	"slices"
+
+	"github.com/navikt/hotbff/httpx"
 )
 
-// Handler returns a handler that renders the named template file
-// decorated with [Elements] fetched using the given [Options].
-// If fetching the elements fails, it returns a 500 Internal Server Error.
-func Handler(name string, opts *Options) http.Handler {
+var validCookieLanguages = []string{"nb", "nn"}
+
+// Handler returns an HTTP handler that serves the provided template with decorator elements.
+// The template will be executed with the fetched elements as data.
+func Handler(name string, opts *Options) (http.Handler, error) {
 	tmpl, err := template.ParseFiles(name)
 	if err != nil {
-		slog.Error("decorator: failed parsing template", "name", name, "error", err)
-		os.Exit(1)
+		return nil, fmt.Errorf("failed parsing template %q: %w", name, err)
+	}
+
+	if opts == nil {
+		opts = &Options{}
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 
 		cookie, err := req.Cookie("decorator-language")
-		if err == nil && (cookie.Value == "nb" || cookie.Value == "nn") {
+		if err == nil && slices.Contains(validCookieLanguages, cookie.Value) {
 			opts.Language = cookie.Value
 		}
 
 		elems, err := Fetch(ctx, opts)
 		if err != nil {
-			if errors.Is(err, context.Canceled) {
-				w.WriteHeader(http.StatusRequestTimeout)
-			} else {
-				slog.ErrorContext(ctx, "decorator: failed fetching elements", "error", err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+			switch {
+			case errors.Is(err, context.Canceled):
+				return
+			case errors.Is(err, context.DeadlineExceeded):
+				w.WriteHeader(http.StatusGatewayTimeout)
+			default:
+				serveError(ctx, w, "failed fetching elements", err)
 			}
 			return
 		}
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+		w.Header().Set(httpx.HeaderContentType, httpx.ContentTypeTextHTML)
 		if err := tmpl.Execute(w, elems); err != nil {
-			slog.ErrorContext(ctx, "decorator: failed executing template", "error", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			serveError(ctx, w, "failed executing template", err)
 		}
-	})
+	}), nil
+}
+
+func serveError(ctx context.Context, w http.ResponseWriter, msg string, err error) {
+	log.ErrorContext(ctx, msg, "error", err)
+	http.Error(w, msg, http.StatusInternalServerError)
 }

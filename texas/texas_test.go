@@ -13,7 +13,7 @@ func TestGetToken(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		err := req.ParseForm()
 		assert.Nil(t, err)
-		assert.Equal(t, req.FormValue(idpFormKey), string(EntraID))
+		assert.Equal(t, req.FormValue(providerFormKey), entraIDProvider)
 		assert.Equal(t, req.FormValue(targetFormKey), target)
 		_, _ = w.Write([]byte(`{"access_token":"accessToken"}`))
 	}))
@@ -32,7 +32,7 @@ func TestExchangeToken(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		err := req.ParseForm()
 		assert.Nil(t, err)
-		assert.Equal(t, req.FormValue(idpFormKey), string(TokenX))
+		assert.Equal(t, req.FormValue(providerFormKey), tokenXProvider)
 		assert.Equal(t, req.FormValue(targetFormKey), target)
 		assert.Equal(t, req.FormValue(userTokenFormKey), userToken)
 		_, _ = w.Write([]byte(`{"access_token":"accessToken"}`))
@@ -51,7 +51,7 @@ func TestIntrospectToken(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		err := req.ParseForm()
 		assert.Nil(t, err)
-		assert.Equal(t, req.FormValue(idpFormKey), string(IDPorten))
+		assert.Equal(t, req.FormValue(providerFormKey), idPortenProvider)
 		assert.Equal(t, req.FormValue(tokenFormKey), token)
 		_, _ = w.Write([]byte(`{"active":true}`))
 	}))
