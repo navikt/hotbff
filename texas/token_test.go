@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/navikt/hotbff/httpx"
 	"github.com/navikt/hotbff/internal/assert"
 )
 
@@ -13,26 +14,26 @@ const jwtStr = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiw
 func TestTokenFromRequestPresent(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 
-	req.Header.Set(HeaderAuthorization, "Bearer "+jwtStr)
+	req.Header.Set(httpx.HeaderAuthorization, "Bearer "+jwtStr)
 	token, ok := TokenFromRequest(req)
 	assert.Equal(t, token, jwtStr)
 	assert.True(t, ok)
 }
 
-func TestTokenFromRequestMissing(t *testing.T) {
+func TestTokenFromRequestAbsent(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 
-	req.Header.Set(HeaderAuthorization, "Bearer ")
+	req.Header.Set(httpx.HeaderAuthorization, "Bearer ")
 	token, ok := TokenFromRequest(req)
 	assert.Equal(t, token, "")
 	assert.False(t, ok)
 
-	req.Header.Set(HeaderAuthorization, "Bearer")
+	req.Header.Set(httpx.HeaderAuthorization, "Bearer")
 	token, ok = TokenFromRequest(req)
 	assert.Equal(t, token, "")
 	assert.False(t, ok)
 
-	req.Header.Del(HeaderAuthorization)
+	req.Header.Del(httpx.HeaderAuthorization)
 	token, ok = TokenFromRequest(req)
 	assert.Equal(t, token, "")
 	assert.False(t, ok)

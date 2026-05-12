@@ -3,7 +3,6 @@ package texas
 import (
 	"context"
 	"log/slog"
-	"net/http"
 )
 
 type testIDP struct {
@@ -22,18 +21,6 @@ func (idp *testIDP) ExchangeToken(_ context.Context, _ string, _ string) (*Token
 
 func (idp *testIDP) IntrospectToken(_ context.Context, _ string) (*TokenIntrospection, error) {
 	return &TokenIntrospection{Active: idp.Active}, idp.Err
-}
-
-func (idp *testIDP) Status() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		ctx := req.Context()
-		user := FromContext(ctx)
-		if user.Authenticated {
-			w.WriteHeader(http.StatusOK)
-		} else {
-			w.WriteHeader(http.StatusUnauthorized)
-		}
-	})
 }
 
 func (idp *testIDP) LogValue() slog.Value {

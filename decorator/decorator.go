@@ -33,7 +33,7 @@ var (
 	}
 )
 
-// Fetch retrieves decorator [Elements] using the given [Options].
+// Fetch retrieves decorator elements using the given options.
 func Fetch(ctx context.Context, opts *Options) (*Elements, error) {
 	if opts == nil {
 		opts = &Options{}
@@ -50,7 +50,6 @@ func Fetch(ctx context.Context, opts *Options) (*Elements, error) {
 	if err != nil {
 		return nil, fmt.Errorf("decorator: %w", err)
 	}
-	//goland:noinspection GoUnhandledErrorResult
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
@@ -79,7 +78,7 @@ type Options struct {
 	LogoutWarning      *bool               // Show a logout warning if true.
 }
 
-// Query is the decorator [Options] expressed as URL query parameters.
+// Query is the decorator options expressed as URL query parameters.
 func (opts *Options) Query() url.Values {
 	q := url.Values{}
 	if opts == nil {

@@ -7,13 +7,14 @@ import (
 	"html/template"
 	"net/http"
 	"slices"
+
+	"github.com/navikt/hotbff/httpx"
 )
 
 var validCookieLanguages = []string{"nb", "nn"}
 
-// Handler returns an [http.Handler] that renders the named template file
-// decorated with [Elements] fetched using the given [Options].
-// If fetching the elements fails, it returns a 500 Internal Server Error.
+// Handler returns an HTTP handler that serves the provided template with decorator elements.
+// The template will be executed with the fetched elements as data.
 func Handler(name string, opts *Options) (http.Handler, error) {
 	tmpl, err := template.ParseFiles(name)
 	if err != nil {
@@ -44,7 +45,7 @@ func Handler(name string, opts *Options) (http.Handler, error) {
 			return
 		}
 
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Header().Set(httpx.HeaderContentType, httpx.ContentTypeTextHTML)
 		if err := tmpl.Execute(w, elems); err != nil {
 			serveError(ctx, w, "failed executing template", err)
 		}

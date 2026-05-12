@@ -8,7 +8,7 @@ import (
 	"github.com/navikt/hotbff/internal/assert"
 )
 
-func TestAuthMiddleware(t *testing.T) {
+func TestAuthenticate(t *testing.T) {
 	tests := []struct {
 		name  string
 		token string
@@ -22,7 +22,7 @@ func TestAuthMiddleware(t *testing.T) {
 			token: "invalid_token",
 		},
 		{
-			name:  "missing token",
+			name:  "token absent",
 			token: "",
 		},
 	}

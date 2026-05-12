@@ -111,7 +111,7 @@ func Configure(mux *http.ServeMux, opts *Options) error {
 	// /base/path/ (public)
 	baseMux := http.NewServeMux()
 	baseMux.Handle("GET /settings.js", settingsHandler(basePath, opts.EnvKeys))
-	baseMux.Handle("GET /auth/status", texas.Status(opts.IDP))
+	baseMux.Handle("GET /auth/status", texas.Validate(opts.IDP))
 	baseMux.Handle("/", newSPAHandler(rootDir, index))
 
 	// /base/path/proxy/prexix
@@ -129,7 +129,7 @@ func protectedIndexHandler(basePath string, idp texas.TokenIntrospector, publicP
 	if idp == nil {
 		return index
 	}
-	protected := texas.RequireAuthentication(idp, basePath, index)
+	protected := texas.Redirect(idp, index, basePath)
 	if len(publicPaths) == 0 {
 		return protected
 	}

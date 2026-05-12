@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/navikt/hotbff/httpx"
 	"github.com/navikt/hotbff/internal/assert"
 	"github.com/navikt/hotbff/texas"
 )
@@ -18,7 +19,7 @@ func TestHandler(t *testing.T) {
 	accessToken := "accessToken"
 
 	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		assert.Equal(t, req.Header.Get(texas.HeaderAuthorization), "Bearer "+accessToken)
+		assert.Equal(t, req.Header.Get(httpx.HeaderAuthorization), "Bearer "+accessToken)
 		_, _ = w.Write([]byte("backend"))
 	}))
 	defer backend.Close()
@@ -32,7 +33,7 @@ func TestHandler(t *testing.T) {
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	req = req.WithContext(texas.NewContext(req.Context(), user))
-	req.Header.Set(texas.HeaderAuthorization, "Bearer "+user.Token)
+	req.Header.Set(httpx.HeaderAuthorization, "Bearer "+user.Token)
 
 	idp := texas.NewTestIDP("accessToken", true, nil)
 	h, err := newReverseProxy(idp, opts)
@@ -40,7 +41,6 @@ func TestHandler(t *testing.T) {
 	h.ServeHTTP(w, req)
 
 	res := w.Result()
-	//goland:noinspection GoUnhandledErrorResult
 	defer res.Body.Close()
 	assert.Equal(t, res.StatusCode, http.StatusOK)
 }

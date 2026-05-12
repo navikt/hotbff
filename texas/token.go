@@ -6,20 +6,19 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+
+	"github.com/navikt/hotbff/httpx"
 )
 
 // ErrInvalidJWT is returned when a JWT-string cannot be parsed.
 var ErrInvalidJWT = errors.New("texas: invalid jwt")
 
-// HeaderAuthorization is the HTTP Authorization header name.
-const HeaderAuthorization string = "Authorization"
-
-// TokenFromRequest extracts the bearer token from the Authorization header of an [http.Request].
-// It returns the token string and a boolean indicating whether a bearer token was found.
+// TokenFromRequest extracts a bearer token from the Authorization header of a request if present.
+// It returns the token and true if a bearer token is found, or an empty string and false if not.
 //
-// NB! This function does not validate the token in any way.
+// TokenFromRequest does not validate the token.
 func TokenFromRequest(req *http.Request) (token string, ok bool) {
-	h := req.Header.Get(HeaderAuthorization)
+	h := req.Header.Get(httpx.HeaderAuthorization)
 	token, ok = strings.CutPrefix(h, "Bearer ")
 	if token == "" {
 		ok = false
@@ -38,7 +37,7 @@ type JWT struct {
 }
 
 // ParseJWT parses a JWT-string into its components: header, claims, and signature.
-// It returns a [JWT] or an [error] if the parsing fails.
+// It returns a JWT, or an error if the parsing fails.
 func ParseJWT(jwtStr string) (*JWT, error) {
 	parts := strings.Split(jwtStr, ".")
 	if len(parts) != 3 {

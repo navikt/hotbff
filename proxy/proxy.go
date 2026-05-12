@@ -9,6 +9,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 
+	"github.com/navikt/hotbff/httpx"
 	"github.com/navikt/hotbff/texas"
 )
 
@@ -19,36 +20,30 @@ var (
 // Options for the proxy.
 type Options struct {
 	Target      string `json:"target"`      // The URL to proxy to (backend).
-	StripPrefix bool   `json:"stripPrefix"` // Whether to strip the prefix from the request URL or not.
-	IDPTarget   string `json:"idpTarget"`   // The target audience used in the token exchange (required if IDP is set).
+	StripPrefix bool   `json:"stripPrefix"` // Whether to strip the prefix from the request URL.
+	IDPTarget   string `json:"idpTarget"`   // The target audience used in the token exchange (enables authentication if not empty).
 }
 
-// Map is a map of proxy [Options] keyed by URL prefix.
+// Map is a map of proxy Options keyed by URL prefix.
 type Map map[string]*Options
 
-// Configure adds proxy handlers to the given [http.ServeMux] based on the provided [Map].
+// Configure adds proxy handlers to the given mux based on the provided map.
 func Configure(mux *http.ServeMux, proxy Map, idp texas.IdentityProvider) error {
 	if mux == nil {
 		mux = http.DefaultServeMux
 	}
-
 	if proxy == nil {
-		log.Info("no proxy endpoints")
 		return nil
 	}
 
 	for prefix, opts := range proxy {
 		if opts == nil {
-			log.Warn("skipping proxy", "prefix", prefix)
-			continue
+			return fmt.Errorf("proxy: options nil for prefix: %q", prefix)
 		}
-
-		log.Info("adding proxy", "prefix", prefix, "target", opts.Target)
 		h, err := newReverseProxy(idp, opts)
 		if err != nil {
 			return err
 		}
-
 		if opts.StripPrefix {
 			mux.Handle(prefix, http.StripPrefix(prefix, h))
 		} else {
@@ -62,7 +57,7 @@ func Configure(mux *http.ServeMux, proxy Map, idp texas.IdentityProvider) error 
 func newReverseProxy(idp texas.IdentityProvider, opts *Options) (http.Handler, error) {
 	t, err := url.Parse(opts.Target)
 	if err != nil {
-		return nil, fmt.Errorf("invalid target: %w", err)
+		return nil, fmt.Errorf("proxy: invalid target: %w", err)
 	}
 
 	if opts.IDPTarget == "" {
@@ -73,7 +68,7 @@ func newReverseProxy(idp texas.IdentityProvider, opts *Options) (http.Handler, e
 		return nil, errors.New("proxy: idp is required when idpTarget is set")
 	}
 
-	return texas.Authenticate(idp, protectedBackend(t, idp, opts.IDPTarget)), nil
+	return texas.Protected(idp, protectedBackend(t, idp, opts.IDPTarget)), nil
 }
 
 func publicBackend(target *url.URL) *httputil.ReverseProxy {
@@ -92,7 +87,7 @@ func protectedBackend(target *url.URL, idp texas.TokenExchanger, idpTarget strin
 			ctx := r.In.Context()
 			user := texas.FromContext(ctx)
 			if !user.Authenticated {
-				log.WarnContext(ctx, "user unauthenticated", "idp", idp, "idpTarget", idpTarget)
+				log.WarnContext(ctx, "unauthenticated", "idp", idp, "idpTarget", idpTarget)
 				return
 			}
 
@@ -104,7 +99,7 @@ func protectedBackend(target *url.URL, idp texas.TokenExchanger, idpTarget strin
 				return
 			}
 
-			r.Out.Header.Set(texas.HeaderAuthorization, "Bearer "+ts.AccessToken)
+			r.Out.Header.Set(httpx.HeaderAuthorization, "Bearer "+ts.AccessToken)
 		},
 	}
 }

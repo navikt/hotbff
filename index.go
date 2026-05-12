@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/navikt/hotbff/decorator"
+	"github.com/navikt/hotbff/httpx"
 )
 
 func indexHandler(rootDir string, opts *decorator.Options) (http.Handler, error) {
@@ -35,7 +36,7 @@ func indexHandler(rootDir string, opts *decorator.Options) (http.Handler, error)
 	modTime := info.ModTime()
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Header().Set(httpx.HeaderContentType, httpx.ContentTypeTextHTML)
 		http.ServeContent(
 			w,
 			req,

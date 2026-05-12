@@ -10,6 +10,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/navikt/hotbff/httpx"
 )
 
 const (
@@ -64,7 +66,7 @@ func (idp *idp) IntrospectToken(ctx context.Context, token string) (*TokenIntros
 	fv.Set(tokenFormKey, token)
 	var ti TokenIntrospection
 	if err := post(ctx, tokenIntrospectionURL, fv, &ti); err != nil {
-		return nil, fmt.Errorf("texas: token introspection failed: %w", err)
+		return nil, fmt.Errorf("texas: token validation failed: %w", err)
 	}
 	return &ti, nil
 }
@@ -85,8 +87,8 @@ func post(ctx context.Context, url string, fv url.Values, v any) error {
 		return err
 	}
 
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set(httpx.HeaderAccept, httpx.ContentTypeApplicationJSON)
+	req.Header.Set(httpx.HeaderContentType, httpx.ContentTypeFormUrlEncoded)
 	res, err := client.Do(req)
 	if err != nil {
 		return err
