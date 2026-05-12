@@ -47,7 +47,7 @@ func Protected(idp TokenIntrospector, next http.Handler) http.Handler {
 		log.Warn("protected: identity provider is not configured, all requests will return 401 Unauthorized")
 		return httpx.Unauthorized
 	}
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	return Authenticate(idp, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 		if isAuthenticated(ctx) {
 			next.ServeHTTP(w, req)
@@ -55,7 +55,7 @@ func Protected(idp TokenIntrospector, next http.Handler) http.Handler {
 			log.DebugContext(ctx, "unauthenticated")
 			httpx.ErrorCode(w, http.StatusUnauthorized)
 		}
-	})
+	}))
 }
 
 // Redirect is a middleware that checks if the user is authenticated.

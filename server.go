@@ -50,6 +50,7 @@ func (opts *Options) LogValue() slog.Value {
 		slog.String("address", address),
 		slog.String("basePath", opts.BasePath),
 		slog.String("rootDir", opts.RootDir),
+		slog.Any("idp", opts.IDP),
 	)
 }
 
