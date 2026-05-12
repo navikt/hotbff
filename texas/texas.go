@@ -41,7 +41,7 @@ type idp struct {
 }
 
 func (idp *idp) GetToken(ctx context.Context, target string) (*TokenSet, error) {
-	fv := newFormValues(idp.provider)
+	fv := formValues(idp.provider)
 	fv.Set(targetFormKey, target)
 	var ts TokenSet
 	if err := post(ctx, tokenURL, fv, &ts); err != nil {
@@ -51,7 +51,7 @@ func (idp *idp) GetToken(ctx context.Context, target string) (*TokenSet, error) 
 }
 
 func (idp *idp) ExchangeToken(ctx context.Context, target string, userToken string) (*TokenSet, error) {
-	fv := newFormValues(idp.exchangeProvider)
+	fv := formValues(idp.exchangeProvider)
 	fv.Set(targetFormKey, target)
 	fv.Set(userTokenFormKey, userToken)
 	var ts TokenSet
@@ -62,7 +62,7 @@ func (idp *idp) ExchangeToken(ctx context.Context, target string, userToken stri
 }
 
 func (idp *idp) IntrospectToken(ctx context.Context, token string) (*TokenIntrospection, error) {
-	fv := newFormValues(idp.provider)
+	fv := formValues(idp.provider)
 	fv.Set(tokenFormKey, token)
 	var ti TokenIntrospection
 	if err := post(ctx, tokenIntrospectionURL, fv, &ti); err != nil {
@@ -75,7 +75,7 @@ func (idp *idp) LogValue() slog.Value {
 	return slog.StringValue(idp.provider)
 }
 
-func newFormValues(provider string) url.Values {
+func formValues(provider string) url.Values {
 	fv := url.Values{}
 	fv.Set(providerFormKey, provider)
 	return fv
@@ -93,7 +93,6 @@ func post(ctx context.Context, url string, fv url.Values, v any) error {
 	if err != nil {
 		return err
 	}
-	//goland:noinspection GoUnhandledErrorResult
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {

@@ -10,7 +10,7 @@ import (
 	"github.com/navikt/hotbff/texas"
 )
 
-func TestHandler(t *testing.T) {
+func TestReverseProxy(t *testing.T) {
 	target := "api://test.test.test/.default"
 	user := &texas.User{
 		Authenticated: true,
@@ -36,7 +36,7 @@ func TestHandler(t *testing.T) {
 	req.Header.Set(httpx.HeaderAuthorization, "Bearer "+user.Token)
 
 	idp := texas.NewTestIDP("accessToken", true, nil)
-	h, err := newReverseProxy(idp, opts)
+	h, err := reverseProxy(idp, opts)
 	assert.Nil(t, err)
 	h.ServeHTTP(w, req)
 

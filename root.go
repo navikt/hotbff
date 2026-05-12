@@ -9,13 +9,13 @@ import (
 	"github.com/navikt/hotbff/httpx"
 )
 
-type spa struct {
-	root  http.FileSystem
-	index http.Handler
-	fs    http.Handler
+type rootHandler struct {
+	root       http.FileSystem
+	index      http.Handler
+	fileServer http.Handler
 }
 
-func (s *spa) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (h *rootHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	upath := req.URL.Path
 	if !strings.HasPrefix(upath, "/") {
 		upath = "/" + upath
@@ -23,39 +23,41 @@ func (s *spa) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 
 	switch upath {
-	// index.html might need decoration, http.FileServer does not perform decoration
 	case "/", "/index.html":
-		s.index.ServeHTTP(w, req)
+		// serve index.html
+		h.index.ServeHTTP(w, req)
 	default:
-		f, err := s.root.Open(upath)
-		if s.handleError(w, req, err) {
+		f, err := h.root.Open(upath)
+		if h.handleError(w, req, err) {
 			return
 		}
 		defer f.Close()
 
 		info, err := f.Stat()
-		if s.handleError(w, req, err) {
+		if h.handleError(w, req, err) {
 			return
 		}
 
 		if info.IsDir() {
-			s.index.ServeHTTP(w, req)
+			// serve index.html
+			h.index.ServeHTTP(w, req)
 			return
 		}
 
 		// serve file
-		s.fs.ServeHTTP(w, req)
+		h.fileServer.ServeHTTP(w, req)
 	}
 }
 
-func (s *spa) handleError(w http.ResponseWriter, req *http.Request, err error) bool {
+func (h *rootHandler) handleError(w http.ResponseWriter, req *http.Request, err error) bool {
 	if err == nil {
 		return false
 	}
 
 	switch {
 	case errors.Is(err, fs.ErrNotExist):
-		s.index.ServeHTTP(w, req)
+		// serve index.html
+		h.index.ServeHTTP(w, req)
 	case errors.Is(err, fs.ErrPermission):
 		httpx.ErrorCode(w, http.StatusForbidden)
 	default:
@@ -65,10 +67,10 @@ func (s *spa) handleError(w http.ResponseWriter, req *http.Request, err error) b
 	return true
 }
 
-func newSPAHandler(rootDir string, index http.Handler) http.Handler {
+func rootServer(rootDir string, index http.Handler) http.Handler {
 	root := http.Dir(rootDir)
 	if index == nil {
 		index = http.NotFoundHandler()
 	}
-	return &spa{root, index, http.FileServer(root)}
+	return &rootHandler{root, index, http.FileServer(root)}
 }

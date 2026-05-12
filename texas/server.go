@@ -44,6 +44,7 @@ func Authenticate(idp TokenIntrospector, next http.Handler) http.Handler {
 // If the user is authenticated, it calls the next handler.
 func Protected(idp TokenIntrospector, next http.Handler) http.Handler {
 	if idp == nil {
+		log.Warn("protected: identity provider is not configured, all requests will return 401 Unauthorized")
 		return httpx.Unauthorized
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -59,14 +60,15 @@ func Protected(idp TokenIntrospector, next http.Handler) http.Handler {
 
 // Redirect is a middleware that checks if the user is authenticated.
 // If not, it redirects to the login page.
-// If the user is authenticated, it calls the next handler.
-func Redirect(idp TokenIntrospector, next http.Handler, basePath string) http.Handler {
+// If the user is authenticated or the request matches a public path, it calls the next handler.
+func Redirect(idp TokenIntrospector, next http.Handler, basePath string, publicPaths []string) http.Handler {
 	if idp == nil {
+		log.Warn("redirect: identity provider is not configured, all requests will return 401 Unauthorized")
 		return httpx.Unauthorized
 	}
 	return Authenticate(idp, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
-		if isAuthenticated(ctx) {
+		if isAuthenticated(ctx) || httpx.PathMatches(req, publicPaths) {
 			next.ServeHTTP(w, req)
 		} else {
 			log.DebugContext(ctx, "unauthenticated")
@@ -78,6 +80,7 @@ func Redirect(idp TokenIntrospector, next http.Handler, basePath string) http.Ha
 // Validate is a handler that returns 200 OK if the user is authenticated, and 401 Unauthorized otherwise.
 func Validate(idp IdentityProvider) http.Handler {
 	if idp == nil {
+		log.Warn("validate: identity provider is not configured, all requests will return 401 Unauthorized")
 		return httpx.Unauthorized
 	}
 	return Authenticate(idp, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {

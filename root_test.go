@@ -8,10 +8,11 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/navikt/hotbff/httpx"
 	"github.com/navikt/hotbff/internal/assert"
 )
 
-func TestSPAHandler(t *testing.T) {
+func TestRootHandler(t *testing.T) {
 	rootDir := t.TempDir()
 
 	indexHTML := "<!DOCTYPE html><html><body>index-content</body></html>"
@@ -30,7 +31,7 @@ func TestSPAHandler(t *testing.T) {
 	assert.Nil(t, err)
 
 	r := http.NewServeMux()
-	r.Handle("/test/", http.StripPrefix("/test", newSPAHandler(rootDir, index)))
+	r.Handle("/test/", http.StripPrefix("/test", rootServer(rootDir, index)))
 
 	h := http.NewServeMux()
 	h.Handle("/", r)
@@ -44,7 +45,7 @@ func TestSPAHandler(t *testing.T) {
 		wantCTPrefix string
 	}{
 		{
-			name:         "direct hit index.html serves index",
+			name:         "serves index when path is index.html",
 			path:         "/test/index.html",
 			wantStatus:   http.StatusOK,
 			wantContains: "index-content",
@@ -52,7 +53,7 @@ func TestSPAHandler(t *testing.T) {
 			wantCTPrefix: "text/html",
 		},
 		{
-			name:         "not found route falls back to index",
+			name:         "serves index for frontend route",
 			path:         "/test/some/route",
 			wantStatus:   http.StatusOK,
 			wantContains: "index-content",
@@ -60,7 +61,7 @@ func TestSPAHandler(t *testing.T) {
 			wantCTPrefix: "text/html",
 		},
 		{
-			name:         "not found asset falls back to index",
+			name:         "serves index when asset absent",
 			path:         "/test/some/asset.js",
 			wantStatus:   http.StatusOK,
 			wantContains: "index-content",
@@ -68,7 +69,7 @@ func TestSPAHandler(t *testing.T) {
 			wantCTPrefix: "text/html",
 		},
 		{
-			name:         "existing js asset is served as file",
+			name:         "serves asset when asset present",
 			path:         "/test/assets/index.js",
 			wantStatus:   http.StatusOK,
 			wantContains: "asset-content",
@@ -95,7 +96,7 @@ func TestSPAHandler(t *testing.T) {
 
 			assert.Contains(t, bodyStr, tc.wantContains)
 			assert.False(t, bodyStr == tc.dontWant)
-			assert.HasPrefix(t, res.Header.Get("Content-Type"), tc.wantCTPrefix)
+			assert.HasPrefix(t, res.Header.Get(httpx.HeaderContentType), tc.wantCTPrefix)
 		})
 	}
 }

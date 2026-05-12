@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+
+	"github.com/navikt/hotbff/httpx"
 )
 
 func settingsHandler(basePath string, envKeys []string) http.Handler {
@@ -16,7 +18,7 @@ func settingsHandler(basePath string, envKeys []string) http.Handler {
 		s[key] = parseEnv(key)
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+		w.Header().Set(httpx.HeaderContentType, httpx.ContentTypeTextJavaScript)
 		if _, err := fmt.Fprint(w, "window.appSettings = "); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

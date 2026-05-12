@@ -6,8 +6,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"path"
-	"strings"
 
 	"github.com/navikt/hotbff/decorator"
 	"github.com/navikt/hotbff/httpx"
@@ -31,9 +29,9 @@ type Options struct {
 	RootDir       string                 // The directory to serve static files from (defaults to "dist").
 	DecoratorOpts *decorator.Options     // Options for the HTML decorator.
 	Proxy         proxy.Map              // Map of proxy options keyed by URL prefix.
-	IDP           texas.IdentityProvider // Identity provider to use for token validation and exchange (if nil, no validation is performed).
-	PublicPaths   []string               // Paths that should be publicly accessible without authentication (only relevant if IDP is set).
-	EnvKeys       []string               // Environment variables that should be exposed to the frontend (via "/settings.js").
+	IDP           texas.IdentityProvider // Identity provider to use for token validation and exchange (if nil, no validation or exhange is performed).
+	PublicPaths   []string               // Paths that should be publicly accessible without login redirection (only relevant if IDP is set).
+	EnvKeys       []string               // Environment variables that should be exposed to the frontend (via "/{basePath}/settings.js").
 }
 
 func (opts *Options) LogValue() slog.Value {
@@ -55,18 +53,33 @@ func (opts *Options) LogValue() slog.Value {
 	)
 }
 
-// Start starts the HTTP server with the given [Options].
+func (opts *Options) WithDefaults() *Options {
+	if opts == nil {
+		opts = &Options{}
+	}
+	if opts.BasePath == "" {
+		opts.BasePath = "/"
+	}
+	if opts.RootDir == "" {
+		opts.RootDir = "dist"
+	}
+	return opts
+}
+
+// Start starts the HTTP server with the given options.
 func Start(mux *http.ServeMux, opts *Options) {
 	if mux == nil {
 		mux = http.DefaultServeMux
 	}
+
 	if opts == nil {
 		opts = &Options{}
 	}
+	opts = opts.WithDefaults()
 
-	err := Configure(mux, opts)
+	err := routes(mux, opts)
 	if err != nil {
-		slog.Error("server configuration failed", "error", err)
+		slog.Error("route configuration failed", "error", err)
 		os.Exit(1)
 	}
 
@@ -78,77 +91,43 @@ func Start(mux *http.ServeMux, opts *Options) {
 	}
 }
 
-// Configure configures the given [http.ServeMux] with the [Options] provided.
-func Configure(mux *http.ServeMux, opts *Options) error {
-	if mux == nil {
-		mux = http.DefaultServeMux
-	}
-	if opts == nil {
-		opts = &Options{}
-	}
+func routes(mux *http.ServeMux, opts *Options) error {
+	// /isalive (without base path)
+	mux.Handle("GET /isalive", httpx.Text("ALIVE"))
+	// /isready (without base path)
+	mux.Handle("GET /isready", httpx.Text("READY"))
 
-	basePath := opts.BasePath
-	if basePath == "" {
-		basePath = "/"
-	}
-
-	rootDir := opts.RootDir
-	if rootDir == "" {
-		rootDir = "dist"
-	}
-
-	// create index handler
-	index, err := indexHandler(rootDir, opts.DecoratorOpts)
-	if err != nil {
-		return fmt.Errorf("failed to create index handler: %w", err)
-	}
-	index = protectedIndexHandler(basePath, opts.IDP, opts.PublicPaths, index)
-
-	// / (public)
-	mux.Handle("GET /isalive", httpx.Health("ALIVE"))
-	mux.Handle("GET /isready", httpx.Health("READY"))
-
-	// /base/path/ (public)
+	// /{basePath}/*
 	baseMux := http.NewServeMux()
-	baseMux.Handle("GET /settings.js", settingsHandler(basePath, opts.EnvKeys))
-	baseMux.Handle("GET /auth/status", texas.Validate(opts.IDP))
-	baseMux.Handle("/", newSPAHandler(rootDir, index))
 
-	// /base/path/proxy/prexix
-	err = proxy.Configure(baseMux, opts.Proxy, opts.IDP)
+	// /{basePath}/auth/status
+	baseMux.Handle("GET /auth/status", texas.Validate(opts.IDP))
+
+	// /{basePath}/settings.js
+	baseMux.Handle("GET /settings.js", settingsHandler(opts.BasePath, opts.EnvKeys))
+
+	// /{basePath}/{prefix}/*
+	err := proxy.Configure(baseMux, opts.Proxy, opts.IDP)
 	if err != nil {
-		return fmt.Errorf("failed to configure proxy: %w", err)
+		return err
 	}
 
-	mux.Handle(basePath, httpx.MaybeStripPrefix(path.Join(basePath), baseMux))
+	// /{basePath}/
+	index, err := indexHandler(opts.RootDir, opts.DecoratorOpts)
+	if err != nil {
+		return err
+	}
+	if opts.IDP != nil {
+		index = texas.Redirect(opts.IDP, index, opts.BasePath, opts.PublicPaths)
+	}
+	baseMux.Handle("/", rootServer(opts.RootDir, index))
+
+	if opts.BasePath == "/" {
+		mux.Handle(opts.BasePath, baseMux)
+	} else {
+		prefix := httpx.NormalizePath(opts.BasePath)
+		mux.Handle(opts.BasePath, http.StripPrefix(prefix, baseMux))
+	}
 
 	return nil
-}
-
-func protectedIndexHandler(basePath string, idp texas.TokenIntrospector, publicPaths []string, index http.Handler) http.Handler {
-	if idp == nil {
-		return index
-	}
-	protected := texas.Redirect(idp, index, basePath)
-	if len(publicPaths) == 0 {
-		return protected
-	}
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		if isPublicPath(req.URL.Path, publicPaths) {
-			index.ServeHTTP(w, req)
-			return
-		}
-		protected.ServeHTTP(w, req)
-	})
-}
-
-func isPublicPath(requestPath string, publicPaths []string) bool {
-	requested := httpx.NormalizePath(requestPath)
-	for _, p := range publicPaths {
-		public := httpx.NormalizePath(p)
-		if public == "/" || requested == public || strings.HasPrefix(requested, public+"/") {
-			return true
-		}
-	}
-	return false
 }

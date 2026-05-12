@@ -38,9 +38,9 @@ func Configure(mux *http.ServeMux, proxy Map, idp texas.IdentityProvider) error 
 
 	for prefix, opts := range proxy {
 		if opts == nil {
-			return fmt.Errorf("proxy: options nil for prefix: %q", prefix)
+			continue
 		}
-		h, err := newReverseProxy(idp, opts)
+		h, err := reverseProxy(idp, opts)
 		if err != nil {
 			return err
 		}
@@ -54,7 +54,7 @@ func Configure(mux *http.ServeMux, proxy Map, idp texas.IdentityProvider) error 
 	return nil
 }
 
-func newReverseProxy(idp texas.IdentityProvider, opts *Options) (http.Handler, error) {
+func reverseProxy(idp texas.IdentityProvider, opts *Options) (http.Handler, error) {
 	t, err := url.Parse(opts.Target)
 	if err != nil {
 		return nil, fmt.Errorf("proxy: invalid target: %w", err)
@@ -63,11 +63,6 @@ func newReverseProxy(idp texas.IdentityProvider, opts *Options) (http.Handler, e
 	if opts.IDPTarget == "" {
 		return publicBackend(t), nil
 	}
-
-	if idp == nil {
-		return nil, errors.New("proxy: idp is required when idpTarget is set")
-	}
-
 	return texas.Protected(idp, protectedBackend(t, idp, opts.IDPTarget)), nil
 }
 
