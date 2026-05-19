@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/fs"
 	"net/http"
+	"path"
 	"strings"
 
 	"github.com/navikt/hotbff/httpx"
@@ -21,13 +22,14 @@ func (h *rootHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		upath = "/" + upath
 		req.URL.Path = upath
 	}
+	name := path.Clean(upath)
 
-	switch upath {
+	switch name {
 	case "/", "/index.html":
 		// serve index.html
 		h.index.ServeHTTP(w, req)
 	default:
-		f, err := h.root.Open(upath)
+		f, err := h.root.Open(name)
 		if h.handleError(w, req, err) {
 			return
 		}

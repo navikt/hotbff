@@ -27,8 +27,8 @@ type Options struct {
 // Map is a map of proxy Options keyed by URL prefix.
 type Map map[string]*Options
 
-// Configure adds proxy handlers to the given mux based on the provided map.
-func Configure(mux *http.ServeMux, proxy Map, idp texas.IdentityProvider) error {
+// AddRoutes adds proxy handlers to the given mux based on the provided map.
+func AddRoutes(mux *http.ServeMux, proxy Map, idp texas.IdentityProvider) error {
 	if mux == nil {
 		mux = http.DefaultServeMux
 	}

@@ -45,7 +45,7 @@ func TestRootHandler(t *testing.T) {
 		wantCTPrefix string
 	}{
 		{
-			name:         "serves index when path is index.html",
+			name:         "serves index when path for index.html",
 			path:         "/test/index.html",
 			wantStatus:   http.StatusOK,
 			wantContains: "index-content",
@@ -54,7 +54,7 @@ func TestRootHandler(t *testing.T) {
 		},
 		{
 			name:         "serves index for frontend route",
-			path:         "/test/some/route",
+			path:         "/test/frontend/route",
 			wantStatus:   http.StatusOK,
 			wantContains: "index-content",
 			dontWant:     "asset-content",

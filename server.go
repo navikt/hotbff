@@ -78,7 +78,7 @@ func Start(mux *http.ServeMux, opts *Options) {
 	}
 	opts = opts.WithDefaults()
 
-	err := routes(mux, opts)
+	err := addRoutes(mux, opts)
 	if err != nil {
 		slog.Error("route configuration failed", "error", err)
 		os.Exit(1)
@@ -92,32 +92,32 @@ func Start(mux *http.ServeMux, opts *Options) {
 	}
 }
 
-func routes(mux *http.ServeMux, opts *Options) error {
-	// /isalive (without base path)
+func addRoutes(mux *http.ServeMux, opts *Options) error {
+	// not prefixed with basePath
+	// /isalive
 	mux.Handle("GET /isalive", httpx.Text("ALIVE"))
-	// /isready (without base path)
+	// /isready
 	mux.Handle("GET /isready", httpx.Text("READY"))
 
-	// /{basePath}/*
+	// prefixed with basePath
 	baseMux := http.NewServeMux()
-
-	// /{basePath}/auth/status
+	// {basePath}/auth/status
 	baseMux.Handle("GET /auth/status", texas.Validate(opts.IDP))
-
-	// /{basePath}/settings.js
+	// {basePath}/settings.js
 	baseMux.Handle("GET /settings.js", settingsHandler(opts.BasePath, opts.EnvKeys))
 
-	// /{basePath}/{prefix}/*
-	err := proxy.Configure(baseMux, opts.Proxy, opts.IDP)
+	// {basePath}/{proxyPrefix}/*
+	err := proxy.AddRoutes(baseMux, opts.Proxy, opts.IDP)
 	if err != nil {
 		return err
 	}
 
-	// /{basePath}/
+	// {basePath}/*
 	index, err := indexHandler(opts.RootDir, opts.DecoratorOpts)
 	if err != nil {
 		return err
 	}
+
 	if opts.IDP != nil {
 		index = texas.Redirect(opts.IDP, index, opts.BasePath, opts.PublicPaths)
 	}

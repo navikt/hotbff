@@ -13,7 +13,7 @@ func TestSettingsHandler(t *testing.T) {
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/settings.js", nil)
 
-	h := settingsHandler("/", []string{"API_URL"})
+	h := settingsHandler("/test/", []string{"API_URL"})
 	h.ServeHTTP(w, req)
 
 	res := w.Result()
@@ -24,8 +24,15 @@ func TestSettingsHandler(t *testing.T) {
 	assert.Nil(t, err)
 
 	js := string(data)
-	assert.HasPrefix(t, js, "window.appSettings = {\n")
-	assert.Contains(t, js, `"API_URL": null`)
-	assert.Contains(t, js, `"BASE_PATH": "/"`)
-	assert.HasSuffix(t, js, "}\n")
+	assert.Equal(t, js, expectedJs)
 }
+
+const expectedJs = `window.appSettings = {
+  "API_URL": null,
+  "BASE_PATH": "/test/",
+  "GIT_COMMIT": null,
+  "NAIS_APP_NAME": null,
+  "NAIS_CLUSTER_NAME": null,
+  "USE_MSW": null
+}
+`

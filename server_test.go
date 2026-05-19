@@ -44,7 +44,7 @@ func callHandler(t *testing.T, req *http.Request) *http.Response {
 	assert.Nil(t, err)
 
 	h := http.NewServeMux()
-	routes(h, &Options{
+	addRoutes(h, &Options{
 		BasePath: "/test/",
 		RootDir:  rootDir,
 	})
