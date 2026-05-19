@@ -18,7 +18,7 @@ var validCookieLanguages = []string{"nb", "nn"}
 func Handler(name string, opts *Options) (http.Handler, error) {
 	tmpl, err := template.ParseFiles(name)
 	if err != nil {
-		return nil, fmt.Errorf("failed parsing template %q: %w", name, err)
+		return nil, fmt.Errorf("decorator: failed parsing template %q: %w", name, err)
 	}
 
 	if opts == nil {
@@ -26,13 +26,14 @@ func Handler(name string, opts *Options) (http.Handler, error) {
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
+		reqOpts := opts.Clone()
 
 		cookie, err := req.Cookie("decorator-language")
 		if err == nil && slices.Contains(validCookieLanguages, cookie.Value) {
-			opts.Language = cookie.Value
+			reqOpts.Language = cookie.Value
 		}
 
-		elems, err := Fetch(ctx, opts)
+		elems, err := Fetch(ctx, reqOpts)
 		if err != nil {
 			switch {
 			case errors.Is(err, context.Canceled):

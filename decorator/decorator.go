@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"slices"
 	"strconv"
 	"time"
 )
@@ -72,9 +73,9 @@ type AvailableLanguage struct {
 // Options for the decorator.
 type Options struct {
 	Context            string              // The context, e.g. "privatperson" | "arbeidsgiver" | "samarbeidspartner".
-	Chatbot            *bool               // Enable the chatbot if true.
 	Language           string              // Locale, e.g. "nb".
 	AvailableLanguages []AvailableLanguage // Available languages for the language selector in the decorator.
+	Chatbot            *bool               // Enable the chatbot if true.
 	LogoutWarning      *bool               // Show a logout warning if true.
 }
 
@@ -85,10 +86,8 @@ func (opts *Options) Query() url.Values {
 		return q
 	}
 
-	q.Set("context", opts.Context)
-
-	if opts.Chatbot != nil {
-		q.Set("chatbot", strconv.FormatBool(*opts.Chatbot))
+	if opts.Context != "" {
+		q.Set("context", opts.Context)
 	}
 
 	if opts.Language != "" {
@@ -100,11 +99,39 @@ func (opts *Options) Query() url.Values {
 		q.Set("availableLanguages", string(b))
 	}
 
+	if opts.Chatbot != nil {
+		q.Set("chatbot", strconv.FormatBool(*opts.Chatbot))
+	}
+
 	if opts.LogoutWarning != nil {
 		q.Set("logoutWarning", strconv.FormatBool(*opts.LogoutWarning))
 	}
 
 	return q
+}
+
+func (opts *Options) Clone() *Options {
+	if opts == nil {
+		return &Options{}
+	}
+
+	clone := &Options{
+		Context:            opts.Context,
+		Language:           opts.Language,
+		AvailableLanguages: slices.Clone(opts.AvailableLanguages),
+	}
+
+	if opts.Chatbot != nil {
+		chatbot := *opts.Chatbot
+		clone.Chatbot = &chatbot
+	}
+
+	if opts.LogoutWarning != nil {
+		logoutWarning := *opts.LogoutWarning
+		clone.LogoutWarning = &logoutWarning
+	}
+
+	return clone
 }
 
 // Elements fetched from the decorator.
