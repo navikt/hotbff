@@ -47,6 +47,7 @@ func Handler(name string, opts *Options) (http.Handler, error) {
 		}
 
 		w.Header().Set(httpx.HeaderContentType, httpx.ContentTypeTextHTML)
+		w.Header().Set("Cache-Control", "no-cache, must-revalidate")
 		if err := tmpl.Execute(w, elems); err != nil {
 			serveError(ctx, w, "failed executing template", err)
 		}

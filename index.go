@@ -37,6 +37,7 @@ func indexHandler(rootDir string, opts *decorator.Options) (http.Handler, error)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set(httpx.HeaderContentType, httpx.ContentTypeTextHTML)
+		w.Header().Set("Cache-Control", "no-cache, must-revalidate")
 		http.ServeContent(
 			w,
 			req,
