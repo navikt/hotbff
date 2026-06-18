@@ -44,7 +44,7 @@ func Fetch(ctx context.Context, opts *Options) (*Elements, error) {
 	if err != nil {
 		return nil, fmt.Errorf("decorator: %w", err)
 	}
-	req.Header.Set("X-Teamname", "digihot")
+	req.Header.Set("x-teamname", "teamdigihot")
 	req.URL.RawQuery = opts.Query().Encode()
 
 	log.DebugContext(ctx, "fetching elements", "url", req.URL)
