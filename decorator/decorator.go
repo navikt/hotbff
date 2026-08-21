@@ -44,8 +44,9 @@ func Fetch(ctx context.Context, opts *Options) (*Elements, error) {
 	if err != nil {
 		return nil, fmt.Errorf("decorator: %w", err)
 	}
-	req.Header.Set("x-teamname", "teamdigihot")
-	req.URL.RawQuery = opts.Query().Encode()
+	q := opts.Query()
+	q.Set("teamName", "teamdigihot.teamdigihot")
+	req.URL.RawQuery = q.Encode()
 
 	log.DebugContext(ctx, "fetching elements", "url", req.URL)
 	res, err := client.Do(req)
